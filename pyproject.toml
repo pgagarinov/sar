@@ -1,41 +1,23 @@
 [project]
-authors = [{name = "Peter Gagarinov", email = "4868370+pgagarinov@users.noreply.github.com"}]
-dependencies = []
-name = "supervisor-harness"
-requires-python = ">= 3.11"
+name = "sar-integration"
 version = "0.1.0"
-
-[project.scripts]
-supervisor-harness = "supervisor_harness.cli:main"
+requires-python = "==3.13.*"
+dependencies = []
+description = "Integration hub for Supervised Agentic Research (SAR) — deploy, test, and manage the multi-repo system"
 
 [build-system]
 build-backend = "hatchling.build"
 requires = ["hatchling"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/sar_integration"]
+
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 
 [tool.pixi.pypi-dependencies]
-supervisor_harness = { path = ".", editable = true }
-
-[tool.pixi.tasks]
-test = "PYTHONPATH=src python -m unittest discover -s tests -v"
-loop = "PYTHONPATH=src python -m supervisor_harness.cli loop"
-loop-once = "PYTHONPATH=src python -m supervisor_harness.cli loop --once"
-monitor = "PYTHONPATH=src python -m supervisor_harness.cli monitor --follow"
-watch-status = "PYTHONPATH=src python -m supervisor_harness.cli watch-status --interval-seconds 30"
-snapshot = "PYTHONPATH=src python -m supervisor_harness.cli snapshot"
-history = "PYTHONPATH=src python -m supervisor_harness.cli history --limit 20"
-status = "PYTHONPATH=src python -m supervisor_harness.cli status"
-stop = "PYTHONPATH=src python -m supervisor_harness.cli stop"
-clean = "PYTHONPATH=src python -m supervisor_harness.cli clean --include-log"
-prompt-list = "PYTHONPATH=src python -m supervisor_harness.cli prompt-list"
-prompt-read = { cmd = "PYTHONPATH=src python -m supervisor_harness.cli prompt-read", depends-on = [] }
-prompt-edit = { cmd = "PYTHONPATH=src python -m supervisor_harness.cli prompt-edit", depends-on = [] }
-prompt-diff = { cmd = "PYTHONPATH=src python -m supervisor_harness.cli prompt-diff", depends-on = [] }
-prompt-history = "PYTHONPATH=src python -m supervisor_harness.cli prompt-history"
-restore = { cmd = "PYTHONPATH=src python -m supervisor_harness.cli restore", depends-on = [] }
-revert-safe = "PYTHONPATH=src python -m supervisor_harness.cli revert-safe"
+sar-integration = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
+python = "3.13.*"

@@ -1,16 +1,16 @@
 ---
 name: delete
-description: "Delete all 3 deployed repos and clean temp files"
+description: "Delete all deployed SAR repos and clean temp files"
 user_invocable: true
 ---
 
 # /delete — Clean All Deployed Repos
 
-Remove all 3 deployed repos and clean temporary files so the next `/deploy` starts fresh.
+Remove all 4 deployed SAR repos and clean temporary files.
 
 ## Configuration
 
-Read `.env` from the workspace root for repo paths.
+Read `.env` from the workspace root.
 
 ## Steps
 
@@ -20,7 +20,8 @@ Read `.env` from the workspace root for repo paths.
    ```bash
    rm -rf ${SUPERVISOR_REPO}
    rm -rf ${RESEARCH_LOOP_REPO}
-   rm -rf ${RAG_SYSTEM_REPO}
+   rm -rf ${RAG_TARGET_REPO}
+   rm -rf ${HARNESS_CORE_REPO}
    ```
 
 3. **Clean temporary files**:
@@ -34,6 +35,6 @@ Read `.env` from the workspace root for repo paths.
 
 ## Safety
 
-- Only removes directories at the configured paths — never removes this integration repo
+- Only removes directories at the configured `.env` paths
+- Never removes this integration repo
 - Verifies each path exists before removing
-- Reports each removal

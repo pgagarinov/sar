@@ -1,50 +1,46 @@
 ---
 name: deploy
-description: "Clone and configure all 3 repos from GitHub"
+description: "Clone and configure all 4 SAR repos from GitHub"
 user_invocable: true
 ---
 
-# /deploy — Deploy All 3 Repos
+# /deploy — Deploy All SAR Repos
 
-Deploy the supervisor harness, research loop, and RAG search system as sibling directories.
+Clone the supervisor, research loop, RAG target, and harness-core as sibling directories.
 
 ## Configuration
 
-Read `.env` from the workspace root for repo locations and GitHub details:
-- `SUPERVISOR_REPO` — path for the supervisor harness
-- `RESEARCH_LOOP_REPO` — path for the research loop
-- `RAG_SYSTEM_REPO` — path for the RAG search system
+Read `.env` from the workspace root. Keys:
 - `GITHUB_OWNER` — GitHub org/user
-- `SUPERVISOR_REPO_NAME`, `RESEARCH_LOOP_REPO_NAME`, `RAG_SYSTEM_REPO_NAME` — repo names
+- `SUPERVISOR_REPO` / `SUPERVISOR_REPO_NAME`
+- `RESEARCH_LOOP_REPO` / `RESEARCH_LOOP_REPO_NAME`
+- `RAG_TARGET_REPO` / `RAG_TARGET_REPO_NAME`
+- `HARNESS_CORE_REPO` / `HARNESS_CORE_REPO_NAME`
 
 ## Steps
 
-1. **Read `.env`** from the workspace root. Parse all variables.
+1. **Read `.env`** and parse all variables.
 
-2. **Check for existing repos** at the configured paths. If any exist, STOP and tell the user to run `/delete` first. Do NOT delete them yourself.
+2. **Check for existing repos**. If any configured paths exist, STOP and tell the user to run `/delete` first.
 
-3. **Clone all 3 repos** from GitHub:
+3. **Clone all 4 repos**:
    ```bash
+   gh repo clone ${GITHUB_OWNER}/${HARNESS_CORE_REPO_NAME} ${HARNESS_CORE_REPO}
    gh repo clone ${GITHUB_OWNER}/${SUPERVISOR_REPO_NAME} ${SUPERVISOR_REPO}
    gh repo clone ${GITHUB_OWNER}/${RESEARCH_LOOP_REPO_NAME} ${RESEARCH_LOOP_REPO}
-   gh repo clone ${GITHUB_OWNER}/${RAG_SYSTEM_REPO_NAME} ${RAG_SYSTEM_REPO}
+   gh repo clone ${GITHUB_OWNER}/${RAG_TARGET_REPO_NAME} ${RAG_TARGET_REPO}
    ```
 
-4. **Configure cross-repo references** in the supervisor's `harness.toml`:
-   - Set `supervised.repo` to the relative path from supervisor to research loop
-   - The research loop's agents already reference `../rag-search-system` — verify this matches `RAG_SYSTEM_REPO` relative to `RESEARCH_LOOP_REPO`
-
-5. **Install dependencies** in each repo:
+4. **Install dependencies** (harness-core first since others depend on it):
    ```bash
+   cd ${HARNESS_CORE_REPO} && pixi install
    cd ${SUPERVISOR_REPO} && pixi install
    cd ${RESEARCH_LOOP_REPO} && pixi install
-   cd ${RAG_SYSTEM_REPO} && pixi install
+   cd ${RAG_TARGET_REPO} && pixi install
    ```
 
-6. **Report** which repos were cloned and installed, and any issues.
+5. **Verify cross-repo paths**:
+   - `${SUPERVISOR_REPO}/harness.toml` `supervised.repo` should resolve to `${RESEARCH_LOOP_REPO}`
+   - `${RESEARCH_LOOP_REPO}/.claude/agents/evaluator.md` should reference a path resolving to `${RAG_TARGET_REPO}`
 
-## Success Criteria
-
-- All 3 repos cloned to configured paths
-- `pixi install` succeeds in each
-- Cross-repo path references are correct
+6. **Report** which repos were cloned, installed, and any issues.
