@@ -28,7 +28,7 @@ Read `.env` from the workspace root.
    ```bash
    rm -rf /tmp/fluxapi-chroma
    rm -f /tmp/rag-eval-report.json
-   rm -f /tmp/cc-rag-supervisor.log
+   rm -f /tmp/cc-sar-supervisor.log
    ```
 
 4. **Report** what was removed.

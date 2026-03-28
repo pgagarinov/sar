@@ -1,7 +1,7 @@
 [project]
 name = "sar-integration"
 version = "0.1.0"
-requires-python = "==3.13.*"
+requires-python = "==3.14.*"
 dependencies = []
 description = "Integration hub for Supervised Agentic Research (SAR) — deploy, test, and manage the multi-repo system"
 
@@ -20,4 +20,4 @@ platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 sar-integration = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
-python = "3.13.*"
+python = "3.14.*"
