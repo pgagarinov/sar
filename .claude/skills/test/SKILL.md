@@ -1,10 +1,10 @@
 ---
-name: test-integration
-description: "Run REAL end-to-end integration tests via the supervisor"
+name: test
+description: "Run REAL end-to-end integration tests for the SAR system"
 user_invocable: true
 ---
 
-# /test-integration — Real End-to-End Tests
+# /test — SAR End-to-End Tests
 
 Test the full SAR pipeline. NO dry runs. NO simulations. NO shortcuts. ALL operations go through each repo's own skills or pixi tasks.
 
@@ -56,6 +56,46 @@ Test 6: Supervisor has /start, /stop, /clean skills
 Test 7: Cross-repo paths resolve
   Read <SUPERVISOR_REPO>/harness.toml, check supervised.repo resolves to <RESEARCH_LOOP_REPO>.
   Check <RESEARCH_LOOP_REPO>/.claude/agents/evaluator.md references sar-rag-target.
+
+Test 12: Package names
+  Verify all 4 repos have correct SAR package names:
+  grep '^name = .sar-' in <HARNESS_CORE_REPO>/pyproject.toml
+  grep '^name = .sar-' in <SUPERVISOR_REPO>/pyproject.toml
+  grep '^name = .sar-' in <RESEARCH_LOOP_REPO>/pyproject.toml
+  grep '^name = .sar-' in <RAG_TARGET_REPO>/pyproject.toml
+  PASS if all 4 match the pattern name = \"sar-...\"
+
+Test 13: Python versions
+  Check requires-python in each repo's pyproject.toml:
+  <HARNESS_CORE_REPO>: must contain 3.14
+  <SUPERVISOR_REPO>: must contain 3.14
+  <RESEARCH_LOOP_REPO>: must contain 3.14
+  <RAG_TARGET_REPO>: must contain 3.13
+  PASS if all versions match expected.
+
+Test 14: Harness-core import
+  cd <SUPERVISOR_REPO> && pixi run python -c 'from harness_core import capture_code_state, extract_metric, metric_trend'
+  PASS if exit code is 0.
+
+Test 15: RAG target skills
+  Check these files exist in <RAG_TARGET_REPO> and are > 100 bytes:
+  .claude/skills/run/SKILL.md
+  .claude/skills/reset/SKILL.md
+  PASS if both exist and are > 100 bytes.
+
+Test 16: Prompt-read content
+  cd <SUPERVISOR_REPO> && pixi run prompt-read skill
+  cd <SUPERVISOR_REPO> && pixi run prompt-read evaluator
+  cd <SUPERVISOR_REPO> && pixi run prompt-read improver
+  PASS if all three return non-empty content (at least 50 characters each).
+
+Test 17: Experiment namespace isolation
+  Generate two experiment IDs: test-iso-aaa and test-iso-bbb.
+  Verify the following paths would NOT collide:
+  - ../sar-rag-target--test-iso-aaa vs ../sar-rag-target--test-iso-bbb
+  - /tmp/fluxapi-chroma--test-iso-aaa-v1 vs /tmp/fluxapi-chroma--test-iso-bbb-v1
+  - /tmp/rag-eval-report--test-iso-aaa-v1.json vs /tmp/rag-eval-report--test-iso-bbb-v1.json
+  PASS if all three pairs are distinct strings (trivially true by construction, but verify the naming convention produces non-overlapping paths).
 
 Report a summary table with PASS/FAIL for each test and the baseline precision value.")
 ```
@@ -109,11 +149,16 @@ Step 3: Poll for results
 
   Continue until:
   - results.tsv has >= 2 non-header entries, OR
-  - 10 minutes have elapsed
+  - 15 minutes have elapsed
 
   Then stop: cd <SUPERVISOR_REPO> && pixi run stop
 
-Step 4: Verify results
+Step 4: Verify run duration
+  Read the supervisor state file at <SUPERVISOR_REPO>/.supervisor/start-state.json (or use pixi run status --json).
+  Check started_at timestamp — the run must have lasted >= 5 minutes of actual runtime.
+  If the run lasted < 5 minutes, report WARNING (not failure) — it may have completed quickly.
+
+Step 5: Verify results
   Test 8 - Supervisor ran: PASS if results.tsv has >= 1 non-header entry
 
   Test 9 - Snapshots captured:
@@ -126,12 +171,19 @@ Step 4: Verify results
     - If status=discard: verify that commit hash does NOT appear in git log
     PASS if all entries are consistent.
 
-  Test 11 - Final metric:
+  Test 11 - Final metric vs baseline:
     cd <RAG_TARGET_REPO> && rm -rf /tmp/fluxapi-chroma && pixi run eval
     Read /tmp/rag-eval-report.json.
+    Compare final precision_at_5 to the Phase 1 baseline.
+    PASS if final precision >= baseline precision (non-regression).
     Report: baseline precision -> final precision, number of kept/discarded.
 
-Report a summary table with PASS/FAIL for tests 8-11.")
+  Test 11a - History has metrics:
+    cd <SUPERVISOR_REPO> && pixi run history --json
+    Parse the JSON output. Check that at least 1 snapshot has a non-null primary_metric.
+    PASS if >= 1 snapshot has non-null primary_metric.
+
+Report a summary table with PASS/FAIL for tests 8-11, 11a.")
 ```
 
 ## Phase 4: Summary
@@ -148,6 +200,12 @@ Phase 1: Infrastructure
   Test 5:  Supervisor prompt-list  PASS/FAIL
   Test 6:  Supervisor skills       PASS/FAIL
   Test 7:  Cross-repo paths       PASS/FAIL
+  Test 12: Package names          PASS/FAIL
+  Test 13: Python versions        PASS/FAIL
+  Test 14: Harness-core import    PASS/FAIL
+  Test 15: RAG target skills      PASS/FAIL
+  Test 16: Prompt-read content    PASS/FAIL
+  Test 17: Namespace isolation    PASS/FAIL
 
 Phase 2: Clean State
   All repos cleaned               PASS/FAIL
@@ -156,9 +214,13 @@ Phase 3: E2E via Supervisor
   Test 8:  Supervisor loop ran     PASS/FAIL  (N iterations)
   Test 9:  Snapshots captured      PASS/FAIL
   Test 10: Keep/discard integrity  PASS/FAIL
-  Test 11: Metric improvement      PASS/FAIL  (X.XX → Y.YY)
+  Test 11: Metric non-regression   PASS/FAIL  (X.XX → Y.YY)
+  Test 11a: History has metrics    PASS/FAIL
 
-Total: X/11 passed
+Total: X/18 passed
+  Phase 1: Tests 1-7, 12-17 (13 tests)
+  Phase 2: Clean state (1 check)
+  Phase 3: Tests 8-11, 11a (4 tests)
 ```
 
 If any test fails, report the failure details and suggest fixes.

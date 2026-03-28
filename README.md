@@ -7,7 +7,7 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    sar-integration (this repo)                   │
-│              /deploy  /delete  /test-integration                │
+│              /deploy  /delete  /test                │
 └──────────────────────────┬──────────────────────────────────────┘
                            │ orchestrates
                            ▼
@@ -51,7 +51,7 @@ Supporting library (no skills):
 | **sar-research-loop** | Autonomous autoresearch improving the target | `/start`, `/clean` |
 | **sar-rag-target** | The RAG system being improved | `/run`, `/reset`, `/search` |
 | **sar-harness-core** | Shared Python library (checkpointing, prompt editing, metrics) | *(no skills)* |
-| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test-integration` |
+| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test` |
 
 ## Quick Start
 
@@ -67,7 +67,7 @@ pixi install
 claude -p /deploy
 
 # 4. Run integration tests (11 tests: infra, clean state, live E2E)
-claude -p /test-integration
+claude -p /test
 ```
 
 ## Skills
@@ -78,7 +78,7 @@ Clones all 4 SAR repos, installs dependencies (harness-core first), and verifies
 ### /delete
 Removes all deployed repos and cleans temp files (`/tmp/fluxapi-chroma`, `/tmp/rag-eval-report.json`, etc.).
 
-### /test-integration
+### /test
 Runs a full end-to-end test suite:
 - **Phase 1** (7 tests): Infrastructure — harness-core tests, RAG eval, research loop assets, supervisor discovery, cross-repo paths
 - **Phase 2**: Clean state — reset target, clean loop, clean supervisor
