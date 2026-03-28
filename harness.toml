@@ -1,0 +1,36 @@
+# Supervisor Harness Configuration
+# Edit this file to configure the harness for your specific project.
+
+[project]
+name = "my-supervisor"
+
+[supervised]
+repo = "../my-project"              # Path to the supervised repo (relative to this workspace)
+default_prompt = "/my-skill"        # Default -p arg to claude
+skill_name = "my-skill"             # .claude/skills/<name>/SKILL.md
+agents = ["agent-a", "agent-b"]     # .claude/agents/<name>.md
+config_dirs = ["~/.claude"]         # Claude config dirs (first = default)
+
+[reports]
+# name = path template (supports {tmp} and {name} placeholders)
+primary = "{tmp}/primary-report.json"
+
+[reports.metric]
+report = "primary"                  # Which report key has the scalar metric
+field = "failed"                    # JSON field to extract
+direction = "minimize"              # "minimize" or "maximize"
+
+[log]
+path = "{tmp}/cc-{name}.log"
+
+[phases]
+# Optional: expected dispatch sequence for heuristic deviation detection
+sequence = ["T", "S", "P"]
+labels = { T = "test", S = "score", P = "fix" }
+markers = { T = "Phase T", S = "Phase S", P = "Phase P" }
+
+[revert]
+paths = ["src/", "tests/", "lib/"]
+
+[stop_hook]
+sleep_seconds = 120
