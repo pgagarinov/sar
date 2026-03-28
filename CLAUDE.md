@@ -1,5 +1,15 @@
 # CLAUDE.md — Supervisor Harness (Generic Template)
 
+## Design Principles
+
+These principles apply to ALL code, prompts, tests, and skills across ALL repos in this system:
+
+- **NO STUBS** — every function must have a real, working implementation
+- **NO FAILOVERS** — if something fails, fix it, don't work around it
+- **NO DRY RUNS** — always run real evaluations and real tests, never simulate
+- **NO HALF-DONE IMPLEMENTATIONS** — every change must be complete and tested
+- **NO SHORTCUTS** — follow the full discipline every time
+
 ## Purpose
 
 This project is a **generic supervisor harness** — the runtime plumbing for an outer research loop that monitors, snapshots, and steers any autonomous inner loop.
