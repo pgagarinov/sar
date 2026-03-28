@@ -1,4 +1,4 @@
-# CLAUDE.md — Supervisor Harness (Generic Template)
+# CLAUDE.md — SAR Integration Hub
 
 ## Design Principles
 
@@ -9,15 +9,39 @@ These principles apply to ALL code, prompts, tests, and skills across ALL repos 
 - **NO DRY RUNS** — always run real evaluations and real tests, never simulate
 - **NO HALF-DONE IMPLEMENTATIONS** — every change must be complete and tested
 - **NO SHORTCUTS** — follow the full discipline every time
+- **ALL OPERATIONS GO THROUGH SKILLS** — never run direct commands on another repo's internals. Each repo exposes its operations as skills (`claude -p /skill`) or pixi tasks (`pixi run task`). The integration hub orchestrates by calling these interfaces, never by reaching into `.supervisor/`, `results.tsv`, or other internal state directly.
 
 ## Purpose
 
-This project is a **generic supervisor harness** — the runtime plumbing for an outer research loop that monitors, snapshots, and steers any autonomous inner loop.
+This is the **integration hub** for the SAR (Supervised Agentic Research) system. It deploys, tests, and manages a multi-repo system:
 
-The supervisor watches an inner worker (e.g., a Claude Code session, a Karpathy autoresearch agent, or any process with a scalar metric), detects stagnation, edits the inner loop's instruction files, and restarts. The Python layer only:
-- launches and stops the inner worker
-- parses the `stream-json` log
-- snapshots prompt assets, temp JSON reports, and repo state
+| Repo | Role | Skills |
+|------|------|--------|
+| `sar-supervisor` | Monitors and steers the research loop | `/start`, `/stop`, `/clean`, `/edit-prompts` |
+| `sar-research-loop` | Autonomous autoresearch improving a target | `/improve`, `/clean` |
+| `sar-rag-target` | The RAG system being improved | `/search`, `/reset` |
+| `sar-harness-core` | Shared library (checkpointing, prompt editing, metrics) | *(Python package, no skills)* |
+
+## How Operations Should Work
+
+To clean everything before a fresh run:
+```
+sar-supervisor:   claude -p /clean    # stops loop, cleans state
+sar-research-loop: claude -p /clean   # removes results.tsv
+sar-rag-target:   claude -p /reset    # reverts code, cleans index
+```
+
+To start a research cycle:
+```
+sar-supervisor:   claude -p /start    # launches research loop, begins monitoring
+```
+
+To stop:
+```
+sar-supervisor:   claude -p /stop     # stops loop, captures final snapshot
+```
+
+The integration hub's `/test-integration` skill orchestrates all of this through the supervisor's entry points.
 - records run history so the outer researcher can compare runs and decide what to edit next
 
 ## Configuration
