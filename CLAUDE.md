@@ -6,18 +6,6 @@ See `README.md` for the system overview, architecture diagram, repo table, and q
 
 When changing architecture, skills, repo structure, or test counts, update `README.md` to match. The README is the human-facing overview; this file is the AI-facing operational guide.
 
-## Design Principles
-
-These principles apply to ALL code, prompts, tests, and skills across ALL repos in this system:
-
-- **NO STUBS** — every function must have a real, working implementation
-- **NO FAILOVERS** — if something fails, fix it, don't work around it
-- **NO DRY RUNS** — always run real evaluations and real tests, never simulate
-- **NO HALF-DONE IMPLEMENTATIONS** — every change must be complete and tested
-- **NO SHORTCUTS** — follow the full discipline every time
-- **ALL OPERATIONS GO THROUGH SKILLS** — never run direct commands on another repo's internals. Each repo exposes its operations as skills (`claude -p /skill`) or pixi tasks (`pixi run task`). The integration hub orchestrates by calling these interfaces, never by reaching into `.supervisor/`, `results.tsv`, or other internal state directly.
-- **PROMPT EDITS ONLY VIA HARNESS** — `.claude/` files in any repo are NEVER edited directly. Use the prompt-edit pixi tasks (`pixi run prompt-edit`, `pixi run target-prompt-edit`). These log, diff, and auto-commit every change.
-
 ## System Architecture
 
 ### Two-Level Research
@@ -28,17 +16,6 @@ Both the supervisor and the researcher do research — at different scopes:
 |-------|----------|-----------|---------------|
 | **Supervisor** | Researcher's methodology | Researcher's `.claude/` (SKILL.md, agents, rules) via `pixi run prompt-edit` | harness.toml `[reports.metric]` |
 | **Researcher** | Target's quality | Target's `src/` code AND target's `.claude/` (skills, agents, rules) via `pixi run target-prompt-edit` | Eval report from target |
-
-### Separation of Concerns
-
-**The supervisor does NOT know what the target is.** It is domain-agnostic. It sees only:
-- A scalar metric (from harness.toml) with a direction (maximize/minimize)
-- The researcher's prompt assets
-- The researcher's behavior patterns (from stream-json log analysis)
-
-The supervisor improves researcher methodology — experiment discipline, stagnation recovery, keep/discard logic, agent dispatch efficiency. Never the target's domain.
-
-**The integration hub does NOT know about researcher internals.** It monitors only the supervisor process. Each layer interacts only with its immediate child.
 
 ### Parallel Experiments
 
@@ -213,11 +190,10 @@ Full end-to-end test suite (18 tests):
 - **Phase 2**: Clean state via skills (1 check) — reset target, clean loop, clean supervisor
 - **Phase 3**: Live E2E via supervisor (4 tests) — start loop, poll results, verify snapshots, check metric non-regression, verify history has metrics
 
-## Technical Standards
+## Rules
 
-- **Package management:** pixi only. Never pip, conda, or poetry directly.
-- **Python:** 3.14 for harness-core, supervisor, research-loop. 3.13 for rag-target (chromadb compatibility).
-- **Testing:** pytest via `pixi run -e dev test`. All config in pyproject.toml.
-- **Paths:** pathlib.Path, never string concatenation.
-- **Formatting:** f-strings, type hints on all signatures, UPPER_SNAKE_CASE constants.
-- **Files:** Under 500 lines. No silent exception handling. No silent fallbacks.
+Operational rules are in `.claude/rules/`:
+- **design-principles** — NO STUBS, NO FAILOVERS, NO DRY RUNS, skills-only operations, prompt edits via harness
+- **separation-of-concerns** — each layer interacts only with its immediate child, supervisor is domain-agnostic
+- **explicit-over-implicit** — no fallbacks, no silent defaults, fail loudly on missing config
+- **pixi-and-python** — pixi only, type hints, pathlib, f-strings, no silent exceptions

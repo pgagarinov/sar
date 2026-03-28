@@ -19,5 +19,4 @@ build/
 /tmp/
 *.log
 
-# Environment config (contains local paths)
-.env
+# .env is tracked — no secrets, just paths and config dirs
