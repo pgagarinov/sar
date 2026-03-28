@@ -18,8 +18,8 @@ This is the **integration hub** for the SAR (Supervised Agentic Research) system
 | Repo | Role | Skills |
 |------|------|--------|
 | `sar-supervisor` | Monitors and steers the research loop | `/start`, `/stop`, `/clean`, `/edit-prompts` |
-| `sar-research-loop` | Autonomous autoresearch improving a target | `/improve`, `/clean` |
-| `sar-rag-target` | The RAG system being improved | `/search`, `/reset` |
+| `sar-research-loop` | Autonomous autoresearch improving a target | `/start`, `/clean` |
+| `sar-rag-target` | The RAG system being improved | `/run`, `/reset` |
 | `sar-harness-core` | Shared library (checkpointing, prompt editing, metrics) | *(Python package, no skills)* |
 
 ## How Operations Should Work
