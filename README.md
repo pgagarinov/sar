@@ -5,60 +5,59 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    sar-integration (this repo)                   │
-│              /deploy  /delete  /test                │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ orchestrates
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      sar-supervisor                              │
-│  Outer researcher: monitors, snapshots, edits prompts           │
-│  Skills: /start  /stop  /clean  /edit-prompts                   │
-│  CLI: pixi run loop | stop | snapshot | prompt-list | ...       │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ launches & monitors
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    sar-research-loop                              │
-│  Inner worker: autonomous evaluate → hypothesize → improve loop │
-│  Skills: /start  /clean                                         │
-│  Agents: evaluator, improver                                    │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ modifies & evaluates
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      sar-rag-target                               │
-│  Target system: RAG search over FluxAPI docs                    │
-│  Skills: /run  /reset  /search                                  │
-│  Agents: retriever, reranker, chunker                           │
-│  Metric: precision_at_5 (maximize)                              │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                    sar-integration (this repo)                        │
+│           /deploy  /delete  /test  /start-supervisor                 │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │ orchestrates
+                            v
+┌──────────────────────────────────────────────────────────────────────┐
+│                       sar-supervisor                                  │
+│  Outer researcher: monitors, snapshots, edits researcher prompts     │
+│  Domain-agnostic — does NOT know what the target is                  │
+│  Skills: /start  /stop  /clean  /edit-prompts                        │
+│  CLI: pixi run loop | experiment start | prompt-edit | ...           │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │ launches & monitors
+                            v
+┌──────────────────────────────────────────────────────────────────────┐
+│                     sar-research-loop                                  │
+│  Inner researcher: autonomous evaluate -> hypothesize -> improve loop │
+│  Skills: /start  /clean  /edit-target-prompts                        │
+│  Agents: evaluator, improver                                         │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │ modifies & evaluates
+                            v
+┌──────────────────────────────────────────────────────────────────────┐
+│                       sar-rag-target                                  │
+│  Target system: RAG search over FluxAPI docs                         │
+│  Skills: /run  /reset  /search                                       │
+│  Agents: retriever, reranker, chunker                                │
+│  Metric: precision_at_5 (maximize)                                   │
+└──────────────────────────────────────────────────────────────────────┘
 
-Supporting library (no skills):
-┌─────────────────────────────────────────────────────────────────┐
-│                    sar-harness-core                               │
-│  Shared: checkpointing, prompt editing, metrics, git utilities  │
-│  Used by: sar-supervisor                                        │
-└─────────────────────────────────────────────────────────────────┘
+Shared library (used by supervisor + research-loop):
+┌──────────────────────────────────────────────────────────────────────┐
+│                     sar-harness-core                                  │
+│  Checkpointing, prompt editing, metrics, git utilities               │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Repos
 
 | Repo | Role | Skills |
 |------|------|--------|
-| **sar-supervisor** | Monitors and steers the research loop | `/start`, `/stop`, `/clean`, `/edit-prompts` |
-| **sar-research-loop** | Autonomous autoresearch improving the target | `/start`, `/clean` |
-| **sar-rag-target** | The RAG system being improved | `/run`, `/reset`, `/search` |
-| **sar-harness-core** | Shared Python library (checkpointing, prompt editing, metrics) | *(no skills)* |
-| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test` |
+| **sar-supervisor** | Outer researcher: monitors, edits researcher prompts | `/start`, `/stop`, `/clean`, `/edit-prompts` |
+| **sar-research-loop** | Inner researcher: autonomous experiment loop | `/start`, `/clean`, `/edit-target-prompts` |
+| **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset`, `/search` |
+| **sar-harness-core** | Shared Python library | *(no skills)* |
+| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/start-supervisor` |
 
 ## Quick Start
 
 ```bash
 # 1. Clone this integration hub
-git clone <this-repo> sar-integration
-cd sar-integration
+git clone <this-repo> sar-integration && cd sar-integration
 
 # 2. Install
 pixi install
@@ -66,27 +65,19 @@ pixi install
 # 3. Deploy all repos (clones and configures the 4 SAR repos)
 claude -p /deploy
 
-# 4. Run integration tests (11 tests: infra, clean state, live E2E)
+# 4. Run integration tests (18 tests: infra, clean state, live E2E)
 claude -p /test
+
+# 5. Start the supervisor (launches the full research loop)
+claude -p /start-supervisor
 ```
 
-## Skills
+## Key Ideas
 
-### /deploy
-Clones all 4 SAR repos, installs dependencies (harness-core first), and verifies cross-repo paths resolve.
+- **Two-level research** — supervisor improves researcher methodology; researcher improves target quality
+- **Separation of concerns** — supervisor is domain-agnostic; each layer interacts only with its immediate child
+- **Parallel experiments** — both levels support isolated parallel variants via git worktrees + env vars
+- **Prompt edits via harness** — all `.claude/` file edits go through `harness_core.prompt_editor` (logged, diffed, auto-committed)
+- **AI-operated** — the system runs autonomously; user intervenes only for debugging or changing objectives
 
-### /delete
-Removes all deployed repos and cleans temp files (`/tmp/fluxapi-chroma`, `/tmp/rag-eval-report.json`, etc.).
-
-### /test
-Runs a full end-to-end test suite:
-- **Phase 1** (7 tests): Infrastructure — harness-core tests, RAG eval, research loop assets, supervisor discovery, cross-repo paths
-- **Phase 2**: Clean state — reset target, clean loop, clean supervisor
-- **Phase 3** (4 tests): Live E2E — start supervisor loop, poll until results, verify snapshots, check keep/discard integrity, compare final metric to baseline
-
-## Design Principles
-
-- **NO STUBS** — every function must have a real, working implementation
-- **NO FAILOVERS** — if something fails, fix it, don't work around it
-- **NO DRY RUNS** — always run real evaluations and real tests, never simulate
-- **ALL OPERATIONS GO THROUGH SKILLS** — never run direct commands on another repo's internals
+See [`CLAUDE.md`](CLAUDE.md) for detailed operational rules, separation of concerns, per-repo interfaces (pixi tasks, agents, rules, hooks), operations guide, and technical standards.
