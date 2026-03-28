@@ -6,101 +6,137 @@ user_invocable: true
 
 # /test-integration — Real End-to-End Tests
 
-Test the full SAR pipeline. The entry point is the supervisor — everything flows through it, just like production.
-
-NO dry runs. NO simulations. NO shortcuts.
+Test the full SAR pipeline. NO dry runs. NO simulations. NO shortcuts. ALL operations go through each repo's own skills or pixi tasks.
 
 ## Configuration
 
-Read `.env` from the workspace root for repo paths.
+Read `.env` from the workspace root for repo paths:
+- `SUPERVISOR_REPO`, `RESEARCH_LOOP_REPO`, `RAG_TARGET_REPO`, `HARNESS_CORE_REPO`
+
+## Execution Model
+
+Run EACH test phase as a separate subagent. This isolates failures and keeps context clean.
 
 ## Phase 1: Infrastructure Verification
 
-### Test 1: harness-core tests pass
-```bash
-cd ${HARNESS_CORE_REPO} && pixi install -e dev && pixi run -e dev test
+Dispatch a subagent for Phase 1:
+
+```
+Agent(subagent_type="general-purpose", prompt="Run SAR infrastructure tests. Read .env from the workspace root to get repo paths. Then run these tests sequentially, reporting PASS/FAIL for each:
+
+Test 1: harness-core tests
+  cd <HARNESS_CORE_REPO> && pixi install -e dev && pixi run -e dev test
+  PASS if all tests pass.
+
+Test 2: RAG target eval produces real metrics
+  cd <RAG_TARGET_REPO> && rm -rf /tmp/fluxapi-chroma && pixi run eval
+  PASS if /tmp/rag-eval-report.json exists and contains precision_at_5.
+  Record the baseline precision value.
+
+Test 3: RAG target unit tests pass
+  cd <RAG_TARGET_REPO> && pixi install -e dev && pixi run -e dev test
+  PASS if all tests pass.
+
+Test 4: Research loop assets exist
+  Check these files exist in <RESEARCH_LOOP_REPO> and are > 100 bytes:
+  .claude/skills/start/SKILL.md
+  .claude/agents/evaluator.md
+  .claude/agents/improver.md
+
+Test 5: Supervisor discovers research loop assets
+  cd <SUPERVISOR_REPO> && pixi run prompt-list
+  PASS if output lists skill, evaluator, and improver.
+
+Test 6: Supervisor has /start, /stop, /clean skills
+  Check these files exist in <SUPERVISOR_REPO>:
+  .claude/skills/start/SKILL.md
+  .claude/skills/stop/SKILL.md
+  .claude/skills/clean/SKILL.md
+
+Test 7: Cross-repo paths resolve
+  Read <SUPERVISOR_REPO>/harness.toml, check supervised.repo resolves to <RESEARCH_LOOP_REPO>.
+  Check <RESEARCH_LOOP_REPO>/.claude/agents/evaluator.md references sar-rag-target.
+
+Report a summary table with PASS/FAIL for each test and the baseline precision value.")
 ```
 
-### Test 2: RAG target eval produces real metrics
-```bash
-cd ${RAG_TARGET_REPO} && rm -rf /tmp/fluxapi-chroma && pixi run eval
+## Phase 2: Clean State via Skills
+
+Before the live test, ensure all repos are in a clean state by calling their skills.
+
+Dispatch a subagent for Phase 2 cleanup:
+
 ```
-PASS if `/tmp/rag-eval-report.json` has `precision_at_5`. Record as baseline.
+Agent(subagent_type="general-purpose", prompt="Clean all SAR repos for a fresh test run. Read .env from workspace root for paths.
 
-### Test 3: RAG target unit tests pass
-```bash
-cd ${RAG_TARGET_REPO} && pixi install -e dev && pixi run -e dev test
+Step 1: Reset RAG target to baseline
+  cd <RAG_TARGET_REPO> && git checkout -- . && git clean -fd && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
+  Then verify: pixi run eval
+  Report the baseline precision_at_5.
+
+Step 2: Clean research loop
+  cd <RESEARCH_LOOP_REPO> && rm -f results.tsv
+
+Step 3: Clean supervisor
+  cd <SUPERVISOR_REPO> && pixi run stop 2>/dev/null; pixi run clean --include-log --include-snapshots 2>/dev/null; rm -rf .supervisor
+
+Report what was cleaned and the verified baseline metric.")
 ```
 
-### Test 4: Research loop assets exist and are substantial
-Files in `${RESEARCH_LOOP_REPO}`: `.claude/skills/improve/SKILL.md`, `.claude/agents/evaluator.md`, `.claude/agents/improver.md` — all > 100 bytes.
+## Phase 3: Live E2E Test via Supervisor
 
-### Test 5: Supervisor discovers research loop assets
-```bash
-cd ${SUPERVISOR_REPO} && pixi run prompt-list
+This is the critical test. The supervisor launches the research loop, which improves the RAG target.
+
+Dispatch a subagent for Phase 3:
+
 ```
-PASS if it lists skill + evaluator + improver.
+Agent(subagent_type="general-purpose", prompt="Run the live SAR E2E test via the supervisor. Read .env from workspace root for paths.
 
-### Test 6: Supervisor has /start and /stop skills
-Check `${SUPERVISOR_REPO}/.claude/skills/start/SKILL.md` and `${SUPERVISOR_REPO}/.claude/skills/stop/SKILL.md` exist.
+IMPORTANT: This test runs REAL Claude sessions. It will take several minutes.
 
-### Test 7: Cross-repo paths resolve
-- `${SUPERVISOR_REPO}/harness.toml` `supervised.repo` resolves to `${RESEARCH_LOOP_REPO}`
-- Research loop agents reference `${RAG_TARGET_REPO}`
+Step 1: Record baseline
+  cd <RAG_TARGET_REPO> && git log --oneline -1
+  Read /tmp/rag-eval-report.json for baseline precision_at_5.
 
-## Phase 2: Live E2E Test via Supervisor
+Step 2: Start supervisor loop
+  cd <SUPERVISOR_REPO> && pixi run loop --no-clean > /tmp/sar-supervisor-loop.log 2>&1 &
+  Record the PID.
 
-This is the critical test. Everything goes through the supervisor — the same path as production.
+Step 3: Poll for results
+  Every 30 seconds, check:
+  - cd <SUPERVISOR_REPO> && pixi run status (is it running?)
+  - cat <RESEARCH_LOOP_REPO>/results.tsv (how many iterations?)
 
-### Test 8: Supervisor starts and monitors research loop
+  Continue until:
+  - results.tsv has >= 2 non-header entries, OR
+  - 10 minutes have elapsed
 
-1. Record baseline state:
-   ```bash
-   cd ${RAG_TARGET_REPO} && git log --oneline -1
-   ```
+  Then stop: cd <SUPERVISOR_REPO> && pixi run stop
 
-2. Start the supervisor loop (it launches the research loop internally):
-   ```bash
-   cd ${SUPERVISOR_REPO} && pixi run loop --no-clean &
-   LOOP_PID=$!
-   ```
+Step 4: Verify results
+  Test 8 - Supervisor ran: PASS if results.tsv has >= 1 non-header entry
 
-3. Poll status every 30 seconds until at least 2 experiment iterations have run:
-   ```bash
-   cd ${SUPERVISOR_REPO} && pixi run status
-   ```
-   Also check `${RESEARCH_LOOP_REPO}/results.tsv` for iteration count.
+  Test 9 - Snapshots captured:
+    cd <SUPERVISOR_REPO> && pixi run history
+    PASS if history shows at least 1 snapshot with a metric value.
 
-4. When results.tsv has >= 2 non-baseline entries (or after 10 minutes max), stop:
-   ```bash
-   cd ${SUPERVISOR_REPO} && pixi run stop
-   ```
+  Test 10 - Keep/discard integrity:
+    Read results.tsv. For each entry:
+    - If status=keep: verify that commit hash appears in cd <RAG_TARGET_REPO> && git log --oneline
+    - If status=discard: verify that commit hash does NOT appear in git log
+    PASS if all entries are consistent.
 
-5. PASS criteria:
-   - Supervisor started successfully (PID exists)
-   - results.tsv has at least 2 experiment entries (beyond baseline)
-   - Supervisor's `.supervisor/history.jsonl` has entries
+  Test 11 - Final metric:
+    cd <RAG_TARGET_REPO> && rm -rf /tmp/fluxapi-chroma && pixi run eval
+    Read /tmp/rag-eval-report.json.
+    Report: baseline precision -> final precision, number of kept/discarded.
 
-### Test 9: Supervisor snapshots captured
-```bash
-cd ${SUPERVISOR_REPO} && pixi run history
+Report a summary table with PASS/FAIL for tests 8-11.")
 ```
-PASS if history shows at least 1 snapshot with a metric value.
 
-### Test 10: Keep/discard integrity
-Read `${RESEARCH_LOOP_REPO}/results.tsv`:
-- For "keep" entries: verify commit exists in `${RAG_TARGET_REPO}` git log
-- For "discard" entries: verify commit was reset
-PASS if all states match.
+## Phase 4: Summary
 
-### Test 11: Final metric comparison
-Run one final eval:
-```bash
-cd ${RAG_TARGET_REPO} && rm -rf /tmp/fluxapi-chroma && pixi run eval
-```
-Report: baseline precision → final precision, number of kept improvements.
-
-## Summary
+After all subagents complete, print the combined summary:
 
 ```
 === SAR E2E TEST RESULTS ===
@@ -113,7 +149,10 @@ Phase 1: Infrastructure
   Test 6:  Supervisor skills       PASS/FAIL
   Test 7:  Cross-repo paths       PASS/FAIL
 
-Phase 2: E2E via Supervisor
+Phase 2: Clean State
+  All repos cleaned               PASS/FAIL
+
+Phase 3: E2E via Supervisor
   Test 8:  Supervisor loop ran     PASS/FAIL  (N iterations)
   Test 9:  Snapshots captured      PASS/FAIL
   Test 10: Keep/discard integrity  PASS/FAIL
@@ -121,3 +160,5 @@ Phase 2: E2E via Supervisor
 
 Total: X/11 passed
 ```
+
+If any test fails, report the failure details and suggest fixes.
