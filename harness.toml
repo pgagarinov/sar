@@ -1,36 +1,34 @@
 # Supervisor Harness Configuration
-# Edit this file to configure the harness for your specific project.
+# Configured to supervise the RAG research loop.
 
 [project]
-name = "my-supervisor"
+name = "rag-supervisor"
 
 [supervised]
-repo = "../my-project"              # Path to the supervised repo (relative to this workspace)
-default_prompt = "/my-skill"        # Default -p arg to claude
-skill_name = "my-skill"             # .claude/skills/<name>/SKILL.md
-agents = ["agent-a", "agent-b"]     # .claude/agents/<name>.md
-config_dirs = ["~/.claude"]         # Claude config dirs (first = default)
+repo = "../rag-research-loop"
+default_prompt = "/improve-rag"
+skill_name = "improve-rag"
+agents = ["evaluator", "improver"]
+config_dirs = ["~/.claude"]
 
 [reports]
-# name = path template (supports {tmp} and {name} placeholders)
-primary = "{tmp}/primary-report.json"
+primary = "{tmp}/rag-eval-report.json"
 
 [reports.metric]
-report = "primary"                  # Which report key has the scalar metric
-field = "failed"                    # JSON field to extract
-direction = "minimize"              # "minimize" or "maximize"
+report = "primary"
+field = "precision_at_5"
+direction = "maximize"
 
 [log]
 path = "{tmp}/cc-{name}.log"
 
 [phases]
-# Optional: expected dispatch sequence for heuristic deviation detection
-sequence = ["T", "S", "P"]
-labels = { T = "test", S = "score", P = "fix" }
-markers = { T = "Phase T", S = "Phase S", P = "Phase P" }
+sequence = ["E", "I"]
+labels = { E = "evaluate", I = "improve" }
+markers = { E = "Running evaluation", I = "Improving" }
 
 [revert]
-paths = ["src/", "tests/", "lib/"]
+paths = ["src/", "tests/"]
 
 [stop_hook]
 sleep_seconds = 120
