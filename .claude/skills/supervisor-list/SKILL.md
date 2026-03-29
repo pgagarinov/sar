@@ -14,21 +14,25 @@ Read `.env` from the workspace root for `SUPERVISOR_REPO`.
 
 ## Steps
 
-Run these commands and present a combined summary:
-
-### 1. Active profiles (supervisor → researcher → target all use the same profile)
+### 1. Profile rotation tree
 ```bash
 cd <SUPERVISOR_REPO> && python3 -c "
-import json, re
-try:
-    d = json.load(open('.supervisor/start-state.json'))
+import json, re, os, glob
+hub_profile = os.environ.get('CLAUDE_CONFIG_DIR', 'unknown')
+print(f'Hub: {hub_profile}')
+state = '.supervisor/start-state.json'
+if os.path.exists(state):
+    d = json.load(open(state))
     cmd = d.get('command', '')
     m = re.search(r'CLAUDE_CONFIG_DIR=(\S+)', cmd)
-    profile = m.group(1) if m else 'unknown'
-    print(f'Profile: {profile} (supervisor + researcher + target)')
-except FileNotFoundError:
-    print('Profile: not running')
-" 2>/dev/null
+    print(f'  Researcher (main): {m.group(1) if m else \"unknown\"}')
+for sf in sorted(glob.glob('.supervisor/start--*-state.json')):
+    rv_id = sf.split('start--')[1].replace('-state.json', '')
+    d = json.load(open(sf))
+    cmd = d.get('command', '')
+    m = re.search(r'CLAUDE_CONFIG_DIR=(\S+)', cmd)
+    print(f'  Researcher Variant {rv_id}: {m.group(1) if m else \"unknown\"}')
+"
 ```
 
 ### 2. Supervisor status
@@ -36,7 +40,7 @@ except FileNotFoundError:
 cd <SUPERVISOR_REPO> && pixi run researcher-status --json
 ```
 
-### 3. Parallel researcher variants
+### 3. Researcher variants
 ```bash
 cd <SUPERVISOR_REPO> && pixi run researcher-variant list --json
 ```
@@ -48,21 +52,24 @@ cd <SUPERVISOR_REPO> && pixi run researcher-history --limit 5 --json
 
 ## Output
 
-Present a structured dashboard:
 ```
+=== Profiles ===
+Hub: ~/.claude-profile-1
+  Researcher (main): ~/.claude-profile-6
+  Researcher Variant rv-001: ~/.claude-profile-9
+  Researcher Variant rv-002: ~/.claude-profile-8
+
 === Supervisor ===
-Profile: ~/.claude-XX
-Status:  running/stopped  PID: XXXXX
-Prompt:  /start
+Status: running  PID: XXXXX
 
 === Researcher Variants ===
-(list or "none")
+(list with profile per researcher variant, or "none")
 
 === Metric History (last 5) ===
-timestamp  metric=X.XX  path=...
+timestamp  metric=X.XX
 ```
 
 ## Important
 
-- ALL commands go through `pixi run` — never run `python -m` directly
-- This is a one-shot snapshot, not continuous monitoring (use `/supervisor-monitor` for that)
+- ALL commands go through `pixi run`
+- This is a one-shot snapshot (use `/supervisor-monitor` for continuous polling)
