@@ -31,8 +31,7 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                       sar-rag-target                                  │
 │  Target system: RAG search over FluxAPI docs                         │
-│  Skills: /run  /reset  /search                                       │
-│  Agents: retriever, reranker, chunker                                │
+│  Skills: /run (single entry point)  /reset                           │
 │  Metric: precision_at_5 (maximize)                                   │
 └──────────────────────────────────────────────────────────────────────┘
 
@@ -49,7 +48,7 @@ Shared library (used by supervisor + research-loop):
 |------|------|--------|
 | **sar-supervisor** | Outer researcher: monitors, edits researcher prompts | `/start`, `/stop`, `/clean`, `/edit-prompts` |
 | **sar-research-loop** | Inner researcher: autonomous experiment loop | `/start`, `/clean`, `/edit-target-prompts` |
-| **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset`, `/search` |
+| **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset` |
 | **sar-harness-core** | Shared Python library | *(no skills)* |
 | **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/start-supervisor` |
 

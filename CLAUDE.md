@@ -12,10 +12,17 @@ When changing architecture, skills, repo structure, or test counts, update `READ
 
 Both the supervisor and the researcher do research — at different scopes:
 
-| Layer | Improves | By editing | Metric source |
-|-------|----------|-----------|---------------|
-| **Supervisor** | Researcher's methodology | Researcher's `.claude/` (SKILL.md, agents, rules) via `pixi run prompt-edit` | harness.toml `[reports.metric]` |
-| **Researcher** | Target's quality | Target's `src/` code AND target's `.claude/` (skills, agents, rules) via `pixi run target-prompt-edit` | Eval report from target |
+| Layer | Improves | By editing | Calls child via |
+|-------|----------|-----------|----------------|
+| **Supervisor** | Researcher's methodology | Researcher's `.claude/` via `pixi run prompt-edit` | `claude -p /start` |
+| **Researcher** | Target's quality | Target's `src/` code + `.claude/` via `pixi run target-prompt-edit` | `claude -p /run` |
+
+### Skills-Only Interfaces
+
+Each layer calls its child ONLY via `claude -p /<skill>`. No `pixi run eval`, no direct Python calls, no reaching into another repo's internals:
+- Integration hub → supervisor: `claude -p /start`, `claude -p /stop`, `claude -p /clean`
+- Supervisor → researcher: `claude -p /start`, `claude -p /clean`
+- Researcher → target: `claude -p /run` (the ONLY entry point for evaluation)
 
 ### Parallel Experiments
 
@@ -108,11 +115,8 @@ The RAG search system being improved. Domain-specific.
 **Skills:**
 | Skill | Purpose |
 |-------|---------|
-| `/run` | Clean ChromaDB, run eval pipeline, report metrics |
+| `/run` | Clean ChromaDB, run eval pipeline, report metrics — the ONLY entry point for evaluation |
 | `/reset` | Revert all code changes, clean cached state, verify baseline |
-| `/search` | Interactive RAG retrieval over FluxAPI docs |
-
-**Agents:** `chunker`, `reranker`, `retriever` (used by `/search` skill)
 
 **Infrastructure:** `src/rag/paths.py` — reads `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH` from env vars. This file is read-only infrastructure, never edited by the researcher. It sits at the base of the git history below all experiment commits.
 
