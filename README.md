@@ -7,7 +7,8 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    sar-integration (this repo)                        │
-│           /deploy  /delete  /test  /start-supervisor                 │
+│  /deploy  /delete  /test  /supervisor-start  /supervisor-stop         │
+│  /supervisor-list  /supervisor-monitor  /setup-env                   │
 └───────────────────────────┬──────────────────────────────────────────┘
                             │ orchestrates
                             v
@@ -16,7 +17,7 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 │  Outer researcher: monitors, snapshots, edits researcher prompts     │
 │  Domain-agnostic — does NOT know what the target is                  │
 │  Skills: /start  /stop  /clean  /edit-prompts                        │
-│  CLI: pixi run loop | experiment start | prompt-edit | ...           │
+│  CLI: pixi run researcher-loop | researcher-experiment start | ...   │
 └───────────────────────────┬──────────────────────────────────────────┘
                             │ launches & monitors
                             v
@@ -50,7 +51,7 @@ Shared library (used by supervisor + research-loop):
 | **sar-research-loop** | Inner researcher: autonomous experiment loop | `/start`, `/clean`, `/edit-target-prompts` |
 | **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset` |
 | **sar-harness-core** | Shared Python library | *(no skills)* |
-| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/start-supervisor` |
+| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/supervisor-start` |
 
 ## Quick Start
 
@@ -68,7 +69,7 @@ claude -p /deploy
 claude -p /test
 
 # 5. Start the supervisor (launches the full research loop)
-claude -p /start-supervisor
+claude -p /supervisor-start
 ```
 
 ## Key Ideas

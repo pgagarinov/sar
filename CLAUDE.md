@@ -14,8 +14,8 @@ Both the supervisor and the researcher do research — at different scopes:
 
 | Layer | Improves | By editing | Calls child via |
 |-------|----------|-----------|----------------|
-| **Supervisor** | Researcher's methodology | Researcher's `.claude/` via `pixi run prompt-edit` | `claude -p /start` |
-| **Researcher** | Target's quality | Target's `src/` code + `.claude/` via `pixi run target-prompt-edit` | `claude -p /run` |
+| **Supervisor** | Researcher's methodology | Researcher's `.claude/` via `pixi run researcher-dot-claude-edit` | `claude -p /start` |
+| **Researcher** | Target's quality | Target's `src/` code + `.claude/` via `pixi run target-dot-claude-edit` | `claude -p /run` |
 
 ### Skills-Only Interfaces
 
@@ -30,9 +30,9 @@ Both levels support parallel experiments with structural isolation (no coordinat
 
 **Supervisor → multiple researcher variants (Level 1):**
 - Each experiment gets an isolated research-loop worktree with its own SKILL.md variant
-- `pixi run experiment start --id exp-X --variant experiments/variants/X.md`
+- `pixi run researcher-experiment start --id exp-X --variant experiments/variants/X.md`
 - Isolated PID/state/log files per experiment
-- `pixi run experiment list/compare` for monitoring
+- `pixi run researcher-experiment list/compare` for monitoring
 
 **Researcher → multiple target variants (Level 2):**
 - Each variant gets a target worktree: `git worktree add ../sar-rag-target--{variant_id}`
@@ -59,21 +59,21 @@ Monitors and steers the research loop. Domain-agnostic.
 | `/start` | Launch researcher, begin active supervision (single or parallel experiment mode) |
 | `/stop` | Stop researcher, capture final snapshot |
 | `/clean` | Remove supervisor state, logs, temp files |
-| `/edit-prompts` | Read/edit/diff researcher's `.claude/` files via `pixi run prompt-read/edit/diff` |
+| `/edit-prompts` | Read/edit/diff researcher's `.claude/` files via `pixi run researcher-dot-claude-read/edit/diff` |
 
 **Key pixi tasks:**
 | Task | Purpose |
 |------|---------|
-| `loop` | Start researcher + monitor in blocking loop (stop hook fires every ~120s) |
-| `start` | Start researcher as background process |
-| `stop` | Stop researcher process |
-| `status` | Check if researcher is running |
-| `snapshot` | Capture current state (log, reports, prompt assets, git state) |
-| `history` | Show snapshot history with metric progression |
-| `monitor` | Follow log analysis in real-time |
-| `prompt-list/read/edit/diff/history` | Manage researcher's `.claude/` files |
-| `experiment start/stop/list/compare` | Manage parallel researcher experiments |
-| `restore` | Restore supervised repo to a previous snapshot |
+| `researcher-loop` | Start researcher + monitor in blocking loop (stop hook fires every ~120s) |
+| `researcher-start` | Start researcher as background process |
+| `researcher-stop` | Stop researcher process |
+| `researcher-status` | Check if researcher is running |
+| `researcher-snapshot` | Capture current state (log, reports, prompt assets, git state) |
+| `researcher-history` | Show snapshot history with metric progression |
+| `researcher-monitor` | Follow log analysis in real-time |
+| `researcher-dot-claude-list/read/edit/diff/history` | Manage researcher's `.claude/` files |
+| `researcher-experiment start/stop/list/compare` | Manage parallel researcher experiments |
+| `researcher-restore` | Restore supervised repo to a previous snapshot |
 | `revert-safe` | Checkpoint + revert supervised repo code |
 
 **Rules:** autonomous-operation, no-direct-supervised-repo, no-raw-revert, prompt-edits
@@ -91,7 +91,7 @@ Autonomous autoresearch loop. Domain-specific. Dispatches evaluator and improver
 |-------|---------|
 | `/start` | Run the autonomous experiment loop (dispatch evaluator → hypothesize → dispatch improver → keep/discard) |
 | `/clean` | Remove results.tsv + experiment worktrees/temp files |
-| `/edit-target-prompts` | Read/edit/diff target's `.claude/` files via `pixi run target-prompt-read/edit/diff` |
+| `/edit-target-prompts` | Read/edit/diff target's `.claude/` files via `pixi run target-dot-claude-read/edit/diff` |
 
 **Agents:**
 | Agent | Purpose |
@@ -102,7 +102,7 @@ Autonomous autoresearch loop. Domain-specific. Dispatches evaluator and improver
 **Key pixi tasks:**
 | Task | Purpose |
 |------|---------|
-| `target-prompt-list/read/edit/diff` | Manage target's `.claude/` files |
+| `target-dot-claude-list/read/edit/diff` | Manage target's `.claude/` files |
 
 **Experiment protocol:** The orchestrator (SKILL.md) is a PURE DISPATCHER — it only dispatches agents, logs results, and decides keep/discard. It never reads source files, runs bash commands to inspect code, or analyzes reports directly. All context flows through agent dispatches.
 
@@ -128,7 +128,7 @@ The RAG search system being improved. Domain-specific.
 ```
 sar-supervisor:  claude -p /start   # launches researcher, begins active supervision
 ```
-The supervisor's `/start` skill runs `pixi run loop --no-clean`. The stop hook fires every ~120s with analysis. The supervisor acts as an autonomous researcher — editing the researcher's prompts when stalled, pivoting strategies, running parallel experiments.
+The supervisor's `/start` skill runs `pixi run researcher-loop --no-clean`. The stop hook fires every ~120s with analysis. The supervisor acts as an autonomous researcher — editing the researcher's prompts when stalled, pivoting strategies, running parallel experiments.
 
 ### Stopping
 ```
@@ -145,26 +145,26 @@ sar-rag-target:    claude -p /reset    # reverts code, cleans index
 ### Running parallel experiments (supervisor level)
 ```bash
 # In sar-supervisor:
-cat experiments/variants/A.md | pixi run prompt-edit skill
-pixi run experiment start --id exp-A
+cat experiments/variants/A.md | pixi run researcher-dot-claude-edit skill
+pixi run researcher-experiment start --id exp-A
 
-cat experiments/variants/B.md | pixi run prompt-edit skill
-pixi run experiment start --id exp-B
+cat experiments/variants/B.md | pixi run researcher-dot-claude-edit skill
+pixi run researcher-experiment start --id exp-B
 
-pixi run experiment list      # monitor
-pixi run experiment compare   # compare metrics
-pixi run experiment stop --id exp-B   # stop loser
+pixi run researcher-experiment list      # monitor
+pixi run researcher-experiment compare   # compare metrics
+pixi run researcher-experiment stop --id exp-B   # stop loser
 ```
 
 ### Editing prompts across layers
 ```bash
 # Supervisor edits researcher's prompts:
-pixi run prompt-read skill                    # in sar-supervisor
-echo "new content" | pixi run prompt-edit skill
+pixi run researcher-dot-claude-read skill                    # in sar-supervisor
+echo "new content" | pixi run researcher-dot-claude-edit skill
 
 # Researcher edits target's prompts:
-pixi run target-prompt-read skill             # in sar-research-loop
-echo "new content" | pixi run target-prompt-edit skill
+pixi run target-dot-claude-read skill             # in sar-research-loop
+echo "new content" | pixi run target-dot-claude-edit skill
 ```
 
 Both use `harness_core.prompt_editor` — logged, diffed, auto-committed.
@@ -185,8 +185,17 @@ Clones all 4 SAR repos from GitHub, installs dependencies (harness-core first si
 ### /delete
 Removes all deployed repos and cleans temp files. Only removes configured paths — never touches the integration hub itself.
 
-### /start-supervisor
-Launches the supervisor as a real Claude session via `claude -p /start` and monitors the supervisor process. Does NOT monitor the researcher or target directly — only the supervisor.
+### /supervisor-start
+Spawn the supervisor as a background process via `pixi run researcher-start --no-clean`, then poll `pixi run researcher-status` every 30s.
+
+### /supervisor-stop
+Stop the supervisor: `pixi run researcher-stop`.
+
+### /supervisor-list
+Dashboard: supervisor status + parallel experiments + recent metric history. One-shot snapshot.
+
+### /supervisor-monitor
+Live structured analysis of the researcher via `pixi run researcher-monitor --follow --json`. Includes Haiku-based anti-pattern detection.
 
 ### /test
 Full end-to-end test suite (18 tests):

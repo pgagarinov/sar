@@ -44,7 +44,7 @@ Test 4: Research loop assets exist
   .claude/agents/improver.md
 
 Test 5: Supervisor discovers research loop assets
-  cd <SUPERVISOR_REPO> && pixi run prompt-list
+  cd <SUPERVISOR_REPO> && pixi run researcher-dot-claude-list
   PASS if output lists skill, evaluator, and improver.
 
 Test 6: Supervisor has /start, /stop, /clean skills
@@ -84,9 +84,9 @@ Test 15: RAG target skills
   PASS if both exist and are > 100 bytes.
 
 Test 16: Prompt-read content
-  cd <SUPERVISOR_REPO> && pixi run prompt-read skill
-  cd <SUPERVISOR_REPO> && pixi run prompt-read evaluator
-  cd <SUPERVISOR_REPO> && pixi run prompt-read improver
+  cd <SUPERVISOR_REPO> && pixi run researcher-dot-claude-read skill
+  cd <SUPERVISOR_REPO> && pixi run researcher-dot-claude-read evaluator
+  cd <SUPERVISOR_REPO> && pixi run researcher-dot-claude-read improver
   PASS if all three return non-empty content (at least 50 characters each).
 
 Test 17: Experiment namespace isolation
@@ -118,7 +118,7 @@ Step 2: Clean research loop
   cd <RESEARCH_LOOP_REPO> && rm -f results.tsv
 
 Step 3: Clean supervisor
-  cd <SUPERVISOR_REPO> && pixi run stop 2>/dev/null; pixi run clean --include-log --include-snapshots 2>/dev/null; rm -rf .supervisor
+  cd <SUPERVISOR_REPO> && pixi run researcher-stop 2>/dev/null; pixi run clean --include-log --include-snapshots 2>/dev/null; rm -rf .supervisor
 
 Report what was cleaned and the verified baseline metric.")
 ```
@@ -139,22 +139,22 @@ Step 1: Record baseline
   Read /tmp/rag-eval-report.json for baseline precision_at_5.
 
 Step 2: Start supervisor loop
-  cd <SUPERVISOR_REPO> && pixi run loop --no-clean > /tmp/sar-supervisor-loop.log 2>&1 &
+  cd <SUPERVISOR_REPO> && pixi run researcher-loop --no-clean > /tmp/sar-supervisor-loop.log 2>&1 &
   Record the PID.
 
 Step 3: Poll for results
   Every 30 seconds, check:
-  - cd <SUPERVISOR_REPO> && pixi run status (is it running?)
+  - cd <SUPERVISOR_REPO> && pixi run researcher-status (is it running?)
   - cat <RESEARCH_LOOP_REPO>/results.tsv (how many iterations?)
 
   Continue until:
   - results.tsv has >= 2 non-header entries, OR
   - 15 minutes have elapsed
 
-  Then stop: cd <SUPERVISOR_REPO> && pixi run stop
+  Then stop: cd <SUPERVISOR_REPO> && pixi run researcher-stop
 
 Step 4: Verify run duration
-  Read the supervisor state file at <SUPERVISOR_REPO>/.supervisor/start-state.json (or use pixi run status --json).
+  Read the supervisor state file at <SUPERVISOR_REPO>/.supervisor/start-state.json (or use pixi run researcher-status --json).
   Check started_at timestamp — the run must have lasted >= 5 minutes of actual runtime.
   If the run lasted < 5 minutes, report WARNING (not failure) — it may have completed quickly.
 
@@ -162,7 +162,7 @@ Step 5: Verify results
   Test 8 - Supervisor ran: PASS if results.tsv has >= 1 non-header entry
 
   Test 9 - Snapshots captured:
-    cd <SUPERVISOR_REPO> && pixi run history
+    cd <SUPERVISOR_REPO> && pixi run researcher-history
     PASS if history shows at least 1 snapshot with a metric value.
 
   Test 10 - Keep/discard integrity:
@@ -179,7 +179,7 @@ Step 5: Verify results
     Report: baseline precision -> final precision, number of kept/discarded.
 
   Test 11a - History has metrics:
-    cd <SUPERVISOR_REPO> && pixi run history --json
+    cd <SUPERVISOR_REPO> && pixi run researcher-history --json
     Parse the JSON output. Check that at least 1 snapshot has a non-null primary_metric.
     PASS if >= 1 snapshot has non-null primary_metric.
 

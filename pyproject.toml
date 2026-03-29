@@ -18,6 +18,24 @@ platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 
 [tool.pixi.pypi-dependencies]
 sar-integration = { path = ".", editable = true }
+sar-harness-core = { path = "../sar-harness-core", editable = true }
+
+[tool.pixi.tasks]
+# Own .claude/ files: dot-claude-<action>
+dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli list"
+dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli read", depends-on = [] }
+dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli edit", depends-on = [] }
+dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli diff", depends-on = [] }
+# Supervisor's .claude/ files: supervisor-dot-claude-<action>
+supervisor-dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor list"
+supervisor-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor read", depends-on = [] }
+supervisor-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor edit", depends-on = [] }
+supervisor-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor diff", depends-on = [] }
+# Researcher's .claude/ files: researcher-dot-claude-<action>
+researcher-dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher list"
+researcher-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher read", depends-on = [] }
+researcher-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher edit", depends-on = [] }
+researcher-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher diff", depends-on = [] }
 
 [tool.pixi.dependencies]
 python = "3.14.*"

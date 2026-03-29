@@ -17,6 +17,6 @@ It monitors only the supervisor process. It never reads results.tsv, target code
 
 ## Prompt edits flow through the harness
 
-- Supervisor edits researcher's `.claude/` via `pixi run prompt-edit`
-- Researcher edits target's `.claude/` via `pixi run target-prompt-edit`
+- Supervisor edits researcher's `.claude/` via `pixi run dot-claude-edit`
+- Researcher edits target's `.claude/` via `pixi run target-dot-claude-edit`
 - Both use `harness_core.prompt_editor` — logged, diffed, auto-committed
