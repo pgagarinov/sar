@@ -31,7 +31,7 @@ Both levels support parallel variants with structural isolation (no coordination
 **Supervisor → multiple researcher variants (Level 1):**
 - Each variant gets an isolated research-loop worktree with its own SKILL.md variant
 - `pixi run researcher-variant start --id rv-X --variant researcher_variants/X.md`
-- Isolated PID/state/log files per variant
+- Isolated PID/state/log files per researcher variant
 - `pixi run researcher-variant list/compare` for monitoring
 
 **Researcher → multiple target variants (Level 2):**
