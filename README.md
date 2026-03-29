@@ -17,7 +17,7 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
 │  Outer researcher: monitors, snapshots, edits researcher prompts     │
 │  Domain-agnostic — does NOT know what the target is                  │
 │  Skills: /start  /stop  /clean  /edit-prompts                        │
-│  CLI: pixi run researcher-loop | researcher-experiment start | ...   │
+│  CLI: pixi run researcher-loop | researcher-variant start | ...      │
 └───────────────────────────┬──────────────────────────────────────────┘
                             │ launches & monitors
                             v
@@ -48,7 +48,7 @@ Shared library (used by supervisor + research-loop):
 | Repo | Role | Skills |
 |------|------|--------|
 | **sar-supervisor** | Outer researcher: monitors, edits researcher prompts | `/start`, `/stop`, `/clean`, `/edit-prompts` |
-| **sar-research-loop** | Inner researcher: autonomous experiment loop | `/start`, `/clean`, `/edit-target-prompts` |
+| **sar-research-loop** | Inner researcher: autonomous research loop | `/start`, `/clean`, `/edit-target-prompts` |
 | **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset` |
 | **sar-harness-core** | Shared Python library | *(no skills)* |
 | **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/supervisor-start` |
@@ -76,7 +76,7 @@ claude -p /supervisor-start
 
 - **Two-level research** — supervisor improves researcher methodology; researcher improves target quality
 - **Separation of concerns** — supervisor is domain-agnostic; each layer interacts only with its immediate child
-- **Parallel experiments** — both levels support isolated parallel variants via git worktrees + env vars
+- **Parallel variants** — both levels support isolated parallel variants via git worktrees + env vars
 - **Prompt edits via harness** — all `.claude/` file edits go through `harness_core.prompt_editor` (logged, diffed, auto-committed)
 - **AI-operated** — the system runs autonomously; user intervenes only for debugging or changing objectives
 

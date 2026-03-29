@@ -6,7 +6,7 @@ user_invocable: true
 
 # /target-reset — Reset the Target
 
-Reset the target repo to the `baseline` git tag (last infrastructure commit, before any experiments).
+Reset the target repo to the `baseline` git tag (last infrastructure commit, before any research changes).
 
 ## Configuration
 
@@ -22,12 +22,12 @@ This resets all code to the baseline tag, cleans ChromaDB index, and removes sta
 
 ## The baseline tag
 
-The `baseline` git tag points to the last infrastructure commit before any experiment commits. It includes:
+The `baseline` git tag points to the last infrastructure commit before any research changes. It includes:
 - Repo rename, Python 3.13, pixi.lock
 - /run skill, rules
-- paths.py (env var support for parallel experiments)
+- paths.py (env var support for parallel variants)
 
-It does NOT include any experiment results (no BM25, no RRF, no chunking changes).
+It does NOT include any research results (no BM25, no RRF, no chunking changes).
 
 ## What this skill does NOT do
 

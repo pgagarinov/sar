@@ -21,6 +21,7 @@ from harness_core.prompt_editor import (
     edit_asset,
     list_assets,
     read_asset,
+    sed_asset,
 )
 
 # Default skill/agent names per repo (used for asset resolution)
@@ -101,18 +102,29 @@ def _cmd_edit(args: argparse.Namespace) -> int:
     repo = _resolve_repo(args.repo)
     claude_dir = repo / ".claude"
     skill_name, agent_names = _get_defaults(repo)
-    content = sys.stdin.read()
-    if not content:
-        print("error: no content on stdin", file=sys.stderr)
-        return 1
-    record = edit_asset(
-        claude_dir=claude_dir,
-        repo_path=repo,
-        skill_name=skill_name,
-        agent_names=agent_names,
-        name=args.name,
-        new_content=content,
-    )
+
+    if args.sed:
+        record = sed_asset(
+            claude_dir=claude_dir,
+            repo_path=repo,
+            skill_name=skill_name,
+            agent_names=agent_names,
+            name=args.name,
+            pattern=args.sed,
+        )
+    else:
+        content = sys.stdin.read()
+        if not content:
+            print("error: no content on stdin", file=sys.stderr)
+            return 1
+        record = edit_asset(
+            claude_dir=claude_dir,
+            repo_path=repo,
+            skill_name=skill_name,
+            agent_names=agent_names,
+            name=args.name,
+            new_content=content,
+        )
     if not record["changed"]:
         print(f"{args.name}: no changes")
         return 0
@@ -159,8 +171,9 @@ def build_parser() -> argparse.ArgumentParser:
     read_p.set_defaults(func=_cmd_read)
 
     edit_p = subparsers.add_parser("edit")
-    edit_p.add_argument("name", help="Asset name to edit (content from stdin)")
+    edit_p.add_argument("name", help="Asset name to edit (content from stdin, or --sed pattern)")
     edit_p.add_argument("--json", action="store_true")
+    edit_p.add_argument("--sed", default=None, help="Apply sed substitution: s/pattern/replacement/[g]")
     edit_p.set_defaults(func=_cmd_edit)
 
     diff_p = subparsers.add_parser("diff")

@@ -1,6 +1,6 @@
 ---
 name: supervisor-list
-description: "Dashboard: supervisor status, experiments, and metric history"
+description: "Dashboard: supervisor status, researcher variants, and metric history"
 user_invocable: true
 ---
 
@@ -36,9 +36,9 @@ except FileNotFoundError:
 cd <SUPERVISOR_REPO> && pixi run researcher-status --json
 ```
 
-### 3. Parallel experiments
+### 3. Parallel researcher variants
 ```bash
-cd <SUPERVISOR_REPO> && pixi run researcher-experiment list --json
+cd <SUPERVISOR_REPO> && pixi run researcher-variant list --json
 ```
 
 ### 4. Recent metric history
@@ -55,7 +55,7 @@ Profile: ~/.claude-XX
 Status:  running/stopped  PID: XXXXX
 Prompt:  /start
 
-=== Experiments ===
+=== Researcher Variants ===
 (list or "none")
 
 === Metric History (last 5) ===

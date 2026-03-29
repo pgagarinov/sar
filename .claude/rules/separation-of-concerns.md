@@ -9,7 +9,7 @@ It is domain-agnostic. It sees only:
 - The researcher's prompt assets
 - The researcher's behavior patterns (from stream-json log analysis)
 
-The supervisor improves researcher methodology — experiment discipline, stagnation recovery, keep/discard logic, agent dispatch efficiency. Never the target's domain.
+The supervisor improves researcher methodology — research discipline, stagnation recovery, keep/discard logic, agent dispatch efficiency. Never the target's domain.
 
 ## The integration hub does NOT know about researcher internals
 

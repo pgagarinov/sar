@@ -89,8 +89,8 @@ Test 16: Prompt-read content
   cd <SUPERVISOR_REPO> && pixi run researcher-dot-claude-read improver
   PASS if all three return non-empty content (at least 50 characters each).
 
-Test 17: Experiment namespace isolation
-  Generate two experiment IDs: test-iso-aaa and test-iso-bbb.
+Test 17: Variant namespace isolation
+  Generate two variant IDs: test-iso-aaa and test-iso-bbb.
   Verify the following paths would NOT collide:
   - ../sar-rag-target--test-iso-aaa vs ../sar-rag-target--test-iso-bbb
   - /tmp/fluxapi-chroma--test-iso-aaa-v1 vs /tmp/fluxapi-chroma--test-iso-bbb-v1
@@ -205,7 +205,7 @@ Phase 1: Infrastructure
   Test 14: Harness-core import    PASS/FAIL
   Test 15: RAG target skills      PASS/FAIL
   Test 16: Prompt-read content    PASS/FAIL
-  Test 17: Namespace isolation    PASS/FAIL
+  Test 17: Variant namespace isolation  PASS/FAIL
 
 Phase 2: Clean State
   All repos cleaned               PASS/FAIL

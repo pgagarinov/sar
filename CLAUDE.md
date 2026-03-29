@@ -24,15 +24,15 @@ Each layer calls its child ONLY via `claude -p /<skill>`. No `pixi run eval`, no
 - Supervisor → researcher: `claude -p /start`, `claude -p /clean`
 - Researcher → target: `claude -p /run` (the ONLY entry point for evaluation)
 
-### Parallel Experiments
+### Parallel Researcher Variants
 
-Both levels support parallel experiments with structural isolation (no coordination needed):
+Both levels support parallel variants with structural isolation (no coordination needed):
 
 **Supervisor → multiple researcher variants (Level 1):**
-- Each experiment gets an isolated research-loop worktree with its own SKILL.md variant
-- `pixi run researcher-experiment start --id exp-X --variant experiments/variants/X.md`
-- Isolated PID/state/log files per experiment
-- `pixi run researcher-experiment list/compare` for monitoring
+- Each variant gets an isolated research-loop worktree with its own SKILL.md variant
+- `pixi run researcher-variant start --id rv-X --variant researcher_variants/X.md`
+- Isolated PID/state/log files per variant
+- `pixi run researcher-variant list/compare` for monitoring
 
 **Researcher → multiple target variants (Level 2):**
 - Each variant gets a target worktree: `git worktree add ../sar-rag-target--{variant_id}`
@@ -56,7 +56,7 @@ Monitors and steers the research loop. Domain-agnostic.
 **Skills:**
 | Skill | Purpose |
 |-------|---------|
-| `/start` | Launch researcher, begin active supervision (single or parallel experiment mode) |
+| `/start` | Launch researcher, begin active supervision (single or parallel variant mode) |
 | `/stop` | Stop researcher, capture final snapshot |
 | `/clean` | Remove supervisor state, logs, temp files |
 | `/edit-prompts` | Read/edit/diff researcher's `.claude/` files via `pixi run researcher-dot-claude-read/edit/diff` |
@@ -72,7 +72,7 @@ Monitors and steers the research loop. Domain-agnostic.
 | `researcher-history` | Show snapshot history with metric progression |
 | `researcher-monitor` | Follow log analysis in real-time |
 | `researcher-dot-claude-list/read/edit/diff/history` | Manage researcher's `.claude/` files |
-| `researcher-experiment start/stop/list/compare` | Manage parallel researcher experiments |
+| `researcher-variant start/stop/list/compare` | Manage parallel researcher variants |
 | `researcher-restore` | Restore supervised repo to a previous snapshot |
 | `revert-safe` | Checkpoint + revert supervised repo code |
 
@@ -80,7 +80,7 @@ Monitors and steers the research loop. Domain-agnostic.
 
 **Stop hook:** `.claude/hooks/stop-check.sh` — sleeps 120s, then runs Haiku-based log analysis. Returns metric trend, deviation detection, and action guidance (CONTINUE/INVESTIGATE/PIVOT) to the supervisor Claude session.
 
-**Configuration:** `harness.toml` — supervised repo path, skill/agent names, report paths, metric field + direction, phase markers, revert paths, stop hook timing, experiment settings.
+**Configuration:** `harness.toml` — supervised repo path, skill/agent names, report paths, metric field + direction, phase markers, revert paths, stop hook timing, variant settings.
 
 ### sar-research-loop — Inner Researcher
 
@@ -89,8 +89,8 @@ Autonomous autoresearch loop. Domain-specific. Dispatches evaluator and improver
 **Skills:**
 | Skill | Purpose |
 |-------|---------|
-| `/start` | Run the autonomous experiment loop (dispatch evaluator → hypothesize → dispatch improver → keep/discard) |
-| `/clean` | Remove results.tsv + experiment worktrees/temp files |
+| `/start` | Run the autonomous research loop (dispatch evaluator → hypothesize → dispatch improver → keep/discard) |
+| `/clean` | Remove results.tsv + variant clones/temp files |
 | `/edit-target-prompts` | Read/edit/diff target's `.claude/` files via `pixi run target-dot-claude-read/edit/diff` |
 
 **Agents:**
@@ -104,9 +104,9 @@ Autonomous autoresearch loop. Domain-specific. Dispatches evaluator and improver
 |------|---------|
 | `target-dot-claude-list/read/edit/diff` | Manage target's `.claude/` files |
 
-**Experiment protocol:** The orchestrator (SKILL.md) is a PURE DISPATCHER — it only dispatches agents, logs results, and decides keep/discard. It never reads source files, runs bash commands to inspect code, or analyzes reports directly. All context flows through agent dispatches.
+**Research protocol:** The orchestrator (SKILL.md) is a PURE DISPATCHER — it only dispatches agents, logs results, and decides keep/discard. It never reads source files, runs bash commands to inspect code, or analyzes reports directly. All context flows through agent dispatches.
 
-**Multi-variant support:** When `EXPERIMENT_ID` env var is set, creates isolated target worktrees with per-variant `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH`.
+**Multi-variant support:** When `RV_ID` env var is set, creates isolated target variant clones with per-variant `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH`.
 
 ### sar-rag-target — The Target
 
@@ -118,7 +118,7 @@ The RAG search system being improved. Domain-specific.
 | `/run` | Clean ChromaDB, run eval pipeline, report metrics — the ONLY entry point for evaluation |
 | `/reset` | Revert all code changes, clean cached state, verify baseline |
 
-**Infrastructure:** `src/rag/paths.py` — reads `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH` from env vars. This file is read-only infrastructure, never edited by the researcher. It sits at the base of the git history below all experiment commits.
+**Infrastructure:** `src/rag/paths.py` — reads `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH` from env vars. This file is read-only infrastructure, never edited by the researcher. It sits at the base of the git history below all commits.
 
 **Pipeline:** `config.py` → `chunker.py` → `indexer.py` → `retriever.py` → `reranker.py` → `pipeline.py` → `evaluator.py`
 
@@ -128,7 +128,7 @@ The RAG search system being improved. Domain-specific.
 ```
 sar-supervisor:  claude -p /start   # launches researcher, begins active supervision
 ```
-The supervisor's `/start` skill runs `pixi run researcher-loop --no-clean`. The stop hook fires every ~120s with analysis. The supervisor acts as an autonomous researcher — editing the researcher's prompts when stalled, pivoting strategies, running parallel experiments.
+The supervisor's `/start` skill runs `pixi run researcher-loop --no-clean`. The stop hook fires every ~120s with analysis. The supervisor acts as an autonomous researcher — editing the researcher's prompts when stalled, pivoting strategies, running parallel variants.
 
 ### Stopping
 ```
@@ -138,22 +138,22 @@ sar-supervisor:  claude -p /stop    # stops researcher, captures final snapshot
 ### Cleaning for a fresh run
 ```
 sar-supervisor:    claude -p /clean    # stops loop, cleans state
-sar-research-loop: claude -p /clean    # removes results.tsv + experiment artifacts
+sar-research-loop: claude -p /clean    # removes results.tsv + variant artifacts
 sar-rag-target:    claude -p /reset    # reverts code, cleans index
 ```
 
-### Running parallel experiments (supervisor level)
+### Running parallel researcher variants (supervisor level)
 ```bash
 # In sar-supervisor:
-cat experiments/variants/A.md | pixi run researcher-dot-claude-edit skill
-pixi run researcher-experiment start --id exp-A
+cat researcher_variants/A.md | pixi run researcher-dot-claude-edit skill
+pixi run researcher-variant start --id rv-A
 
-cat experiments/variants/B.md | pixi run researcher-dot-claude-edit skill
-pixi run researcher-experiment start --id exp-B
+cat researcher_variants/B.md | pixi run researcher-dot-claude-edit skill
+pixi run researcher-variant start --id rv-B
 
-pixi run researcher-experiment list      # monitor
-pixi run researcher-experiment compare   # compare metrics
-pixi run researcher-experiment stop --id exp-B   # stop loser
+pixi run researcher-variant list      # monitor
+pixi run researcher-variant compare   # compare metrics
+pixi run researcher-variant stop --id rv-B   # stop loser
 ```
 
 ### Editing prompts across layers
@@ -192,7 +192,7 @@ Spawn the supervisor as a background process via `pixi run researcher-start --no
 Stop the supervisor: `pixi run researcher-stop`.
 
 ### /supervisor-list
-Dashboard: supervisor status + parallel experiments + recent metric history. One-shot snapshot.
+Dashboard: supervisor status + parallel researcher variants + recent metric history. One-shot snapshot.
 
 ### /supervisor-monitor
 Live structured analysis of the researcher via `pixi run researcher-monitor --follow --json`. Includes Haiku-based anti-pattern detection.
