@@ -90,7 +90,7 @@ Test 16: Prompt-read content
   PASS if all three return non-empty content (at least 50 characters each).
 
 Test 17: Variant namespace isolation
-  Generate two variant IDs: test-iso-aaa and test-iso-bbb.
+  Generate two researcher variant IDs: test-iso-aaa and test-iso-bbb.
   Verify the following paths would NOT collide:
   - ../sar-rag-target--test-iso-aaa vs ../sar-rag-target--test-iso-bbb
   - /tmp/fluxapi-chroma--test-iso-aaa-v1 vs /tmp/fluxapi-chroma--test-iso-bbb-v1
