@@ -26,18 +26,49 @@ Each layer calls its child ONLY via `claude -p /<skill>`. No `pixi run eval`, no
 
 ### Parallel Researcher Variants
 
-Both levels support parallel variants with structural isolation (no coordination needed):
+Both levels support parallel variants with structural isolation via `git clone --local` (hardlinks, separate `.git`, zero shared state):
 
 **Supervisor → multiple researcher variants (Level 1):**
-- Each variant gets an isolated research-loop worktree with its own SKILL.md variant
+- Each researcher variant gets an isolated research-loop clone AND a target clone
 - `pixi run researcher-variant start --id rv-X --variant researcher_variants/X.md`
 - Isolated PID/state/log files per researcher variant
-- `pixi run researcher-variant list/compare` for monitoring
+- Profile rotation: each researcher variant gets a different `CLAUDE_CONFIG_DIR`
 
 **Researcher → multiple target variants (Level 2):**
-- Each variant gets a target worktree: `git worktree add ../sar-rag-target--{variant_id}`
+- Each target variant is a `git clone --local` from `CANONICAL_TARGET`
 - Isolated temp files via env vars: `CHROMA_PERSIST_DIR`, `RAG_REPORT_PATH`
 - Target's `src/rag/paths.py` reads these env vars (infrastructure file, never edited by researcher)
+
+### Researcher Variant Lifecycle
+
+```
+RUN → PARK → MERGE or DISCARD
+```
+
+| Command | What it does |
+|---------|-------------|
+| `researcher-variant start --id rv-X` | Create clones, launch researcher |
+| `researcher-variant park --id rv-X` | Stop process, preserve target clone + snapshot metrics |
+| `researcher-variant parked` | List parked researcher variants with metrics |
+| `researcher-variant compare` | Compare metrics across all researcher variants |
+| `researcher-variant merge --id rv-X --strategy <strategy>` | Apply winner's target to canonical |
+| `researcher-variant rollback` | Undo last merge from backup |
+| `researcher-variant discard --id rv-X` | Destroy all clones and temp files |
+
+### Merge Strategies
+
+When multiple researcher variants find different optimal target states:
+
+- **Winner Takes All**: Best researcher variant's entire target state replaces canonical. `git fetch` + `git reset --hard FETCH_HEAD`.
+- **Cherry-Pick**: Pick individual target commits from multiple researcher variants. Conflicts are skipped.
+- **Branch-and-Continue**: Move winning researcher variant's target clone to become canonical.
+
+All strategies create a backup before merging. `researcher-variant rollback` restores from backup.
+
+### Profile Rotation
+
+See `.claude/rules/profile-rotation.md` for the full tree. Each level gets a different `CLAUDE_CONFIG_DIR`:
+- Hub: profile[I], Supervisor: profile[I+1], Researcher Variant N: profile[I+2+N], Target: profile[I+3+N]
 
 ## Repos and Their Interfaces
 
@@ -73,6 +104,9 @@ Monitors and steers the research loop. Domain-agnostic.
 | `researcher-monitor` | Follow log analysis in real-time |
 | `researcher-dot-claude-list/read/edit/diff/history` | Manage researcher's `.claude/` files |
 | `researcher-variant start/stop/list/compare` | Manage parallel researcher variants |
+| `researcher-variant park/discard/parked` | Park (preserve target clone), discard, list parked |
+| `researcher-variant merge --strategy <s>` | Apply winner's target to canonical (winner-takes-all/cherry-pick/branch-and-continue) |
+| `researcher-variant rollback` | Undo last merge from backup |
 | `researcher-restore` | Restore supervised repo to a previous snapshot |
 | `revert-safe` | Checkpoint + revert supervised repo code |
 
@@ -153,7 +187,11 @@ pixi run researcher-variant start --id rv-B
 
 pixi run researcher-variant list      # monitor
 pixi run researcher-variant compare   # compare metrics
-pixi run researcher-variant stop --id rv-B   # stop loser
+pixi run researcher-variant park --id rv-A   # park all before merging
+pixi run researcher-variant park --id rv-B
+pixi run researcher-variant parked           # show parked with metrics
+pixi run researcher-variant merge --id rv-A --strategy winner-takes-all  # merge winner
+pixi run researcher-variant discard --id rv-B   # discard loser
 ```
 
 ### Editing prompts across layers

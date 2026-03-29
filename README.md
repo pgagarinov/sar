@@ -76,7 +76,9 @@ claude -p /supervisor-start
 
 - **Two-level research** — supervisor improves researcher methodology; researcher improves target quality
 - **Separation of concerns** — supervisor is domain-agnostic; each layer interacts only with its immediate child
-- **Parallel variants** — both levels support isolated parallel variants via git worktrees + env vars
+- **Parallel variants** — both levels support isolated parallel variants via `git clone --local` (separate `.git`, zero shared state)
+- **Profile rotation** — each level uses a different `CLAUDE_CONFIG_DIR` (I+1 pattern) to spread API quota
+- **Merge strategies** — winner-takes-all, cherry-pick, or branch-and-continue to reconcile parallel results
 - **Prompt edits via harness** — all `.claude/` file edits go through `harness_core.prompt_editor` (logged, diffed, auto-committed)
 - **AI-operated** — the system runs autonomously; user intervenes only for debugging or changing objectives
 
