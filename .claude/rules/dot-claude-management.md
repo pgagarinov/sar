@@ -21,4 +21,4 @@ echo "skill content" | pixi run dot-claude-edit skills/my-skill/SKILL.md
 ```
 
 ## Why
-Every .claude/ change must be logged, diffed, and auto-committed via `harness_core.prompt_editor`. Direct file operations bypass this tracking.
+Every .claude/ change must be logged, diffed, and auto-committed via `harness_core.prompt_editor`. Direct file operations (including sed, awk, and other shell tools) bypass this tracking.
