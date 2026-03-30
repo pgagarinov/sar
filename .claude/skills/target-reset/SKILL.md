@@ -1,12 +1,12 @@
 ---
 name: target-reset
-description: "Reset the target to its initial baseline state"
+description: "Reset the target to its initial seed state"
 user_invocable: true
 ---
 
 # /target-reset — Reset the Target
 
-Reset the target repo to the `baseline` git tag (last infrastructure commit, before any research changes).
+Reset the target repo to the `seed` git tag (the original initial commit, before any research changes).
 
 ## Configuration
 
@@ -15,19 +15,17 @@ Read `.env` from the workspace root for `RAG_TARGET_REPO`.
 ## Steps
 
 ```bash
-cd <RAG_TARGET_REPO> && git reset --hard baseline && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
+cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
 ```
 
-This resets all code to the baseline tag, cleans ChromaDB index, and removes stale eval reports.
+This resets all code to the seed, resets the baseline cursor to match, cleans ChromaDB index, and removes stale eval reports.
 
-## The baseline tag
+## Two tags in the target
 
-The `baseline` git tag points to the last infrastructure commit before any research changes. It includes:
-- Repo rename, Python 3.13, pixi.lock
-- /run skill, rules
-- paths.py (env var support for parallel variants)
+- **`seed`** — IMMUTABLE. Points to the original initial commit. Never moves. This is the starting point for a fresh research cycle.
+- **`baseline`** — MOVING CURSOR. Points to the last merged state. Used by `merge_cherry_pick` to find new commits since the last merge. Moves after each merge operation.
 
-It does NOT include any research results (no BM25, no RRF, no chunking changes).
+`/target-reset` resets both HEAD and baseline to `seed`.
 
 ## What this skill does NOT do
 
