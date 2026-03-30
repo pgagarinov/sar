@@ -23,4 +23,6 @@ build/
 .claude/scheduled_tasks.lock
 .claude/scheduled_tasks.json
 
-# .env is tracked — no secrets, just paths and config dirs
+# .env is machine-specific (profiles differ per machine) — use .env.example as template
+.env
+.env
