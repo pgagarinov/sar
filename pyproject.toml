@@ -22,23 +22,23 @@ sar-harness-core = { path = "../sar-harness-core", editable = true }
 
 [tool.pixi.tasks]
 # Own .claude/ files: dot-claude-<action>
-dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli list"
-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli read", depends-on = [] }
-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli edit", depends-on = [] }
-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli diff", depends-on = [] }
-dot-claude-delete = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli delete", depends-on = [] }
+dot-claude-list = "python -m harness_core.dot_claude_cli list"
+dot-claude-read = { cmd = "python -m harness_core.dot_claude_cli read", depends-on = [] }
+dot-claude-edit = { cmd = "python -m harness_core.dot_claude_cli edit", depends-on = [] }
+dot-claude-diff = { cmd = "python -m harness_core.dot_claude_cli diff", depends-on = [] }
+dot-claude-delete = { cmd = "python -m harness_core.dot_claude_cli delete", depends-on = [] }
 # Supervisor's .claude/ files: supervisor-dot-claude-<action>
-supervisor-dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor list"
-supervisor-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor read", depends-on = [] }
-supervisor-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor edit", depends-on = [] }
-supervisor-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor diff", depends-on = [] }
-supervisor-dot-claude-delete = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo supervisor delete", depends-on = [] }
+supervisor-dot-claude-list = "python -m harness_core.dot_claude_cli --repo supervisor list"
+supervisor-dot-claude-read = { cmd = "python -m harness_core.dot_claude_cli --repo supervisor read", depends-on = [] }
+supervisor-dot-claude-edit = { cmd = "python -m harness_core.dot_claude_cli --repo supervisor edit", depends-on = [] }
+supervisor-dot-claude-diff = { cmd = "python -m harness_core.dot_claude_cli --repo supervisor diff", depends-on = [] }
+supervisor-dot-claude-delete = { cmd = "python -m harness_core.dot_claude_cli --repo supervisor delete", depends-on = [] }
 # Researcher's .claude/ files: researcher-dot-claude-<action>
-researcher-dot-claude-list = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher list"
-researcher-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher read", depends-on = [] }
-researcher-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher edit", depends-on = [] }
-researcher-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher diff", depends-on = [] }
-researcher-dot-claude-delete = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher delete", depends-on = [] }
+researcher-dot-claude-list = "python -m harness_core.dot_claude_cli --repo researcher list"
+researcher-dot-claude-read = { cmd = "python -m harness_core.dot_claude_cli --repo researcher read", depends-on = [] }
+researcher-dot-claude-edit = { cmd = "python -m harness_core.dot_claude_cli --repo researcher edit", depends-on = [] }
+researcher-dot-claude-diff = { cmd = "python -m harness_core.dot_claude_cli --repo researcher diff", depends-on = [] }
+researcher-dot-claude-delete = { cmd = "python -m harness_core.dot_claude_cli --repo researcher delete", depends-on = [] }
 
 [tool.pixi.environments]
 dev = { features = ["dev"], solve-group = "default" }
