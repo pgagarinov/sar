@@ -19,4 +19,8 @@ build/
 /tmp/
 *.log
 
+# Claude Code runtime artifacts
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+
 # .env is tracked — no secrets, just paths and config dirs

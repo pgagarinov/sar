@@ -80,7 +80,14 @@ rm -f /tmp/rag-eval-report*.json
 rm -f <RESEARCH_LOOP_REPO>/results.tsv
 ```
 
-### 8. Report
+### 8. Remove Claude Code runtime artifacts
+
+```bash
+rm -f .claude/scheduled_tasks.lock
+rm -f .claude/scheduled_tasks.json
+```
+
+### 9. Report
 
 List what was removed. Verify:
 ```bash
