@@ -96,4 +96,4 @@ ls /tmp/cc-sar-supervisor*.log 2>/dev/null || echo "logs: clean"
 - ALWAYS stop before cleaning — never `rm -rf` a directory that a running process is using
 - This skill does NOT modify canonical repos (sar-rag-target, sar-research-loop, sar-supervisor code)
 - This skill does NOT touch the hub (take3-pe)
-- To also reset the target code to baseline, run `/target-reset` separately
+- To also reset the target code to the original seed, run `/target-reset` separately

@@ -19,14 +19,28 @@ Target variants are sequential hypothesis tests managed by the researcher. The r
 | `kept` | Improvement confirmed, becomes the new working copy |
 | `discarded` | Regression detected, `git reset --hard HEAD~1` |
 
+## Git Tags in the Target
+
+Two git tags serve different purposes:
+
+| Tag | Moves? | Points to | Used by |
+|-----|--------|-----------|---------|
+| `seed` | **NEVER** | Original initial commit (`8b64e6b`) | `/target-reset` — go back to the very beginning |
+| `baseline` | After each merge | Last merged state | `merge_cherry_pick` — find new commits since last merge |
+
+- `seed` is the immutable starting point. It is set once and never touched by any operation.
+- `baseline` is a moving cursor. It advances after WTA, cherry-pick, and B&C merges. Rollback restores it to the pre-merge position.
+- `/target-reset` resets HEAD to `seed` AND resets `baseline` back to `seed`.
+
 ## Invariants
 
 1. A running researcher variant has BOTH a researcher clone AND a target clone
 2. A parked researcher variant has ONLY the target clone (researcher clone cleaned to save space)
 3. After merge, the canonical target HEAD matches the winning researcher variant's target HEAD
-4. After merge, the `baseline` git tag is updated to the new HEAD
-5. A backup snapshot exists for every merge (rollback is always possible)
-6. After discard, no researcher clone, target clone, or temp files remain for that researcher variant
+4. After merge, the `baseline` cursor is updated to the new HEAD
+5. The `seed` tag NEVER moves — it always points to the original initial commit
+6. A backup snapshot exists for every merge (rollback is always possible)
+7. After discard, no researcher clone, target clone, or temp files remain for that researcher variant
 
 ## Merge Rules
 

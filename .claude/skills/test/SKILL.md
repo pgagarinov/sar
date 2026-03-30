@@ -109,8 +109,8 @@ Dispatch a subagent for Phase 2 cleanup:
 ```
 Agent(subagent_type="general-purpose", prompt="Clean all SAR repos for a fresh test run. Read .env from workspace root for paths.
 
-Step 1: Reset RAG target to baseline
-  cd <RAG_TARGET_REPO> && git checkout -- . && git clean -fd && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
+Step 1: Reset RAG target to seed
+  cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
   Then verify: pixi run eval
   Report the baseline precision_at_5.
 
