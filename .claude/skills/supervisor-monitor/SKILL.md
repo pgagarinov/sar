@@ -33,9 +33,9 @@ When the user invokes `/supervisor-monitor`:
 
 ```
 Hub: ~/.claude-profile-1
-└── Supervisor: ~/.claude-profile-2
+└── Supervisor: ~/.claude-profile-2  (started 17:00, running 1h 15m)
     │
-    ├── Researcher (main): ~/.claude-profile-6
+    ├── Researcher (main): ~/.claude-profile-6  (started 17:00, running 1h 15m)
     │   PID: 95600  running
     │   │
     │   └── Target: P@5=0.65  R@5=0.575
@@ -44,7 +44,7 @@ Hub: ~/.claude-profile-1
     │         #4  1cc81ef  0.35  discard  chunk overlap
     │         #5  eca93b6  0.60  discard  swap RRF
     │
-    ├── Researcher Variant rv-001 (precision-safe): ~/.claude-profile-9
+    ├── Researcher Variant rv-001 (precision-safe): ~/.claude-profile-9  (started 17:05, running 1h 10m)
     │   PID: 96001  running
     │   │
     │   ├── Target Variant rv-001-tv-1: P@5=0.70  R@5=0.62
@@ -54,7 +54,7 @@ Hub: ~/.claude-profile-1
     │     #7  ddd3456  0.62  discard  heading-aware
     │     #8  eee7890  0.64  keep     overlap 300
     │
-    └── Researcher Variant rv-002 (evaluator-direct): ~/.claude-profile-8
+    └── Researcher Variant rv-002 (evaluator-direct): ~/.claude-profile-8  (started 17:10, stopped after 25m)
         PID: 96002  stopped
         │
         └── Target Variant rv-002-tv-1: P@5=0.55  R@5=0.50
@@ -68,16 +68,24 @@ Hub: ~/.claude-profile-1
 Given the JSON from the agent:
 
 - **Hub line**: `Hub: {hub_profile}`
-- **Supervisor line**: `└── Supervisor: {supervisor_profile}`
+- **Supervisor line**: `└── Supervisor: {supervisor_profile}  (started HH:MM, running Xh Ym)` — compute duration from `now - supervisor_started_at`
 - **Each researcher** in the `researchers` array becomes a child node:
   - First entry is always `Researcher (main)`
   - Others are `Researcher Variant {id} ({name})`
   - Use `├──` for non-last, `└──` for last
+  - Show profile + timing: `(started HH:MM, running Xh Ym)` if running, `(started HH:MM, stopped after Xh Ym)` if stopped
   - Show `PID: {pid}  {running/stopped}`
   - **Target**: `P@5={precision_at_5:.4f}  R@5={recall_at_5:.4f}` or `no report yet` if target is null
   - **Runs**: `Runs (last 3 of {total}: {kept} keep, {discarded} discard):` or `no runs yet` if runs is null
   - Each run: `#{n}  {commit}  {metric}  {status}  {description}`
   - **Target variants**: children of the researcher, show metrics for each
+
+## Duration formatting
+
+Compute `duration = now - started_at` from the JSON:
+- Under 1 hour: `Xm` (e.g. `45m`)
+- 1+ hours: `Xh Ym` (e.g. `1h 15m`)
+- If `started_at` is null: show `(no start time)`
 
 ## For a one-shot snapshot
 
