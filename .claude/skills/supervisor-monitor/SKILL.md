@@ -1,34 +1,64 @@
 ---
 name: supervisor-monitor
-description: "Live tree view of supervisor via /loop — polls every 30s"
+description: "Live tree view of supervisor via cron — agent collects stats every 30s"
 user_invocable: true
 ---
 
 # /supervisor-monitor — Live Monitoring
 
-Sets up a recurring 30-second loop that prints the full supervisor tree.
+Sets up a recurring cron that dispatches an agent every 30 seconds to collect stats and print the tree.
 
 ## Implementation
 
-When the user invokes `/supervisor-monitor`, run:
+When the user invokes `/supervisor-monitor`:
+
+1. Create a cron job that fires every minute:
+   ```
+   CronCreate(cron="*/1 * * * *", prompt="/supervisor-monitor-tick", recurring=true)
+   ```
+
+2. Run the first tick immediately (don't wait for cron).
+
+3. Report the cron job ID so the user can cancel with `CronDelete`.
+
+## What each tick does
+
+Each tick dispatches an **agent** (subagent_type="general-purpose") with the prompt below. The agent does ALL the data collection and returns ONLY the formatted tree. No intermediate output reaches the user — just the final tree.
+
+### Agent prompt for each tick
 
 ```
-/loop 30s /supervisor-monitor-tick
-```
+Collect SAR supervisor stats and print a tree. Run these bash commands, then format the output. Print ONLY the tree — no commentary.
 
-The `/loop` skill handles recurring execution. Interrupt to stop.
+Paths:
+  SUP=/Users/peter/_Git/_Claude/_KL/sar-supervisor
+  RES=/Users/peter/_Git/_Claude/_KL/sar-research-loop
+  TGT=/Users/peter/_Git/_Claude/_KL/sar-rag-target
 
-## What each tick collects and prints
+Commands to run:
+1. cd $SUP && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-status 2>&1
+2. cat $SUP/.supervisor/start-state.json 2>/dev/null
+3. cat /tmp/rag-eval-report.json 2>/dev/null
+4. tail -3 $RES/results.tsv 2>/dev/null
+5. wc -l $RES/results.tsv 2>/dev/null; grep -c keep $RES/results.tsv 2>/dev/null; grep -c discard $RES/results.tsv 2>/dev/null
+6. cd $SUP && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant list --json 2>&1
+7. For each variant from step 6:
+   - cat $SUP/.supervisor/start--{rv_id}-state.json 2>/dev/null
+   - head -3 /tmp/sar-research-loop--{rv_id}/.claude/skills/start/SKILL.md 2>/dev/null
+   - tail -3 /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
+   - wc -l /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
+   - grep -c keep /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
+   - grep -c discard /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
+   - ls -d $TGT--{rv_id}-tv-* 2>/dev/null
+   - cat /tmp/rag-eval-report--{rv_id}-tv-*.json 2>/dev/null
 
-Each tick must collect ALL data and print the tree in this EXACT format:
+Print the tree in this EXACT format (example with main + 2 variants):
 
-```
-Hub: ~/.claude-profile-1
-└── Supervisor: ~/.claude-profile-2
+Hub: <CLAUDE_CONFIG_DIR>
+└── Supervisor: <supervisor profile>
     │
-    ├── Researcher (main): ~/.claude-profile-6
-    │   PID: 95600  running  events=80
-    │   Latest: "Dispatching improver for BM25..."
+    ├── Researcher (main): <main profile>
+    │   PID: 95600  running
     │   │
     │   └── Target: P@5=0.65  R@5=0.575
     │       Runs (last 3 of 5: 2 keep, 3 discard):
@@ -36,7 +66,7 @@ Hub: ~/.claude-profile-1
     │         #4  1cc81ef  0.35  discard  chunk overlap
     │         #5  eca93b6  0.60  discard  swap RRF
     │
-    ├── Researcher Variant rv-001 (precision-safe): ~/.claude-profile-9
+    ├── Researcher Variant rv-001 (precision-safe): <rv-001 profile>
     │   PID: 96001  running
     │   │
     │   ├── Target Variant rv-001-tv-1: P@5=0.70  R@5=0.62
@@ -46,85 +76,24 @@ Hub: ~/.claude-profile-1
     │     #7  ddd3456  0.62  discard  heading-aware
     │     #8  eee7890  0.64  keep     overlap 300
     │
-    └── Researcher Variant rv-002 (evaluator-direct): ~/.claude-profile-8
+    └── Researcher Variant rv-002 (evaluator-direct): <rv-002 profile>
         PID: 96002  stopped
         │
         └── Target Variant rv-002-tv-1: P@5=0.55  R@5=0.50
         Runs (2: 0 keep, 2 discard):
           #1  fff1234  0.65  baseline
           #2  ggg5678  0.55  discard  alternate eval
+
+Rules:
+- The main researcher IS a variant — always show it as "Researcher (main)" in the tree. Never say "no variants" if main is running.
+- Additional researcher variants (rv-*) are siblings of main under the Supervisor node.
+- Use ├── for non-last children, └── for last child, │ for continuing lines.
+- If no eval report exists: show "no report yet" for that target.
+- If no results.tsv: show "no runs yet".
+- If main researcher is not running and no variants exist, show "(all stopped)" under Supervisor.
+- Truncate run descriptions to 60 chars. Show commit hash as first 7 chars.
+- Print ONLY the tree. No preamble, no commentary, no "here is the tree".
 ```
-
-## Data collection commands
-
-### Hub profile
-The hub's own `CLAUDE_CONFIG_DIR` from the environment.
-
-### Supervisor profile
-```bash
-cat <SUPERVISOR_REPO>/.supervisor/start-state.json 2>/dev/null | python3 -c "import sys,json,re; cmd=json.load(sys.stdin).get('command',''); m=re.search(r'CLAUDE_CONFIG_DIR=(\S+)',cmd); print(m.group(1) if m else 'unknown')"
-```
-
-### Main researcher
-```bash
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-status
-```
-
-### Main researcher target metrics
-```bash
-cat /tmp/rag-eval-report.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'P@5={d[\"precision_at_5\"]:.4f}  R@5={d[\"recall_at_5\"]:.4f}')"
-```
-
-### Main researcher runs
-```bash
-# Totals
-wc -l <RESEARCH_LOOP_REPO>/results.tsv
-grep -c keep <RESEARCH_LOOP_REPO>/results.tsv
-grep -c discard <RESEARCH_LOOP_REPO>/results.tsv
-# Last 3
-tail -3 <RESEARCH_LOOP_REPO>/results.tsv
-```
-
-### Researcher variants
-```bash
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant list --json
-```
-
-For EACH variant:
-```bash
-cat <SUPERVISOR_REPO>/.supervisor/start--{rv_id}-state.json 2>/dev/null   # profile
-head -3 /tmp/sar-research-loop--{rv_id}/.claude/skills/start/SKILL.md     # variant name from description
-tail -3 /tmp/sar-research-loop--{rv_id}/results.tsv                       # runs
-wc -l /tmp/sar-research-loop--{rv_id}/results.tsv                         # total
-grep -c keep /tmp/sar-research-loop--{rv_id}/results.tsv                  # keeps
-grep -c discard /tmp/sar-research-loop--{rv_id}/results.tsv               # discards
-```
-
-### Target variants within each researcher variant
-```bash
-ls -d <RAG_TARGET_REPO>--{rv_id}-tv-* 2>/dev/null
-cat /tmp/rag-eval-report--{rv_id}-tv-{N}.json 2>/dev/null
-```
-
-## Tree formatting rules
-
-- Hub is the root node
-- Supervisor is a child of Hub (shows profile)
-- Researcher (main) is a child of Supervisor (shows profile, PID, running status)
-- Target is a child of Researcher (shows metrics)
-- Runs are indented under Target (show last 3 with commit hash, metric, status, description)
-- Researcher Variants are siblings of Researcher (main), each with their own profile and PID
-- Target Variants are children of their Researcher Variant
-- Use `├──` for non-last children, `└──` for last child
-- Use `│` for continuing vertical lines
-
-## Handling missing data
-
-- No researcher state file: show `(not started)`
-- No eval report: show `no report yet`
-- No results.tsv: show `no runs yet`
-- No researcher variants: omit that section entirely
-- No target variants within a researcher: just show the single target metrics
 
 ## For a one-shot snapshot
 
