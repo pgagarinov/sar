@@ -846,7 +846,7 @@ packages:
 - pypi: ./
   name: sar-integration
   version: 0.1.0
-  sha256: fa36a73f9f0ec13079e87c0cb43c5b85397de8428643fc72cb61760aa0d29b31
+  sha256: 51434e1b79a402baa70c4a7bb7a8e0f06665680cf067837520287e48ba2fad15
   requires_python: ==3.14.*
 - conda: https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_h366c992_103.conda
   sha256: cafeec44494f842ffeca27e9c8b0c27ed714f93ac77ddadc6aaf726b5554ebac
