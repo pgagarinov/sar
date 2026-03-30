@@ -1,4 +1,9 @@
-# Supervisor Monitor Agent
+---
+name: supervisor-monitor
+description: Collect SAR supervisor stats (researcher status, metrics, runs, variants) and return structured JSON for tree rendering
+tools: Bash, Read, Glob, Grep
+model: haiku
+---
 
 Collect SAR supervisor stats and return structured JSON. Run bash commands, parse outputs, return a single JSON object. Print ONLY valid JSON — no commentary, no preamble, no markdown fences.
 
