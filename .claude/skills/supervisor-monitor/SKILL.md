@@ -1,86 +1,26 @@
 ---
 name: supervisor-monitor
-description: "Live tree view of all researcher variants and target variants"
+description: "Live tree view of supervisor via /loop — polls every 30s"
 user_invocable: true
 ---
 
-# /supervisor-monitor — Full Tree Monitor
+# /supervisor-monitor — Live Monitoring
 
-Real-time tree view showing ALL researcher variants, ALL target variants within each, metrics, and target runs.
+Sets up a recurring 30-second loop that prints the full supervisor tree.
 
-## Configuration
+## Implementation
 
-Read `.env` from the workspace root for `SUPERVISOR_REPO`, `RESEARCH_LOOP_REPO`, `RAG_TARGET_REPO`.
+When the user invokes `/supervisor-monitor`, run:
 
-## Data Collection
-
-On each poll cycle, collect ALL of the following:
-
-### 1. Main researcher
-
-```bash
-# Status + profile
-cd <SUPERVISOR_REPO> && pixi run researcher-status --json
-
-# Full payload (events, dispatches, latest text, metric)
-cd <SUPERVISOR_REPO> && pixi run researcher-watch-status --once --json
-
-# Target metrics
-cat /tmp/rag-eval-report.json 2>/dev/null
-
-# Target runs (last 5)
-tail -5 <RESEARCH_LOOP_REPO>/results.tsv 2>/dev/null
-
-# Count totals
-wc -l <RESEARCH_LOOP_REPO>/results.tsv 2>/dev/null
-grep -c keep <RESEARCH_LOOP_REPO>/results.tsv 2>/dev/null
-grep -c discard <RESEARCH_LOOP_REPO>/results.tsv 2>/dev/null
+```
+/loop 30s /supervisor-monitor-tick
 ```
 
-### 2. Researcher variants
+The `/loop` skill handles recurring execution. Interrupt to stop.
 
-```bash
-cd <SUPERVISOR_REPO> && pixi run researcher-variant list --json
-```
+## What each tick collects and prints
 
-For EACH researcher variant ID:
-```bash
-# State + profile
-cat <SUPERVISOR_REPO>/.supervisor/start--{rv_id}-state.json 2>/dev/null
-
-# Variant name (from SKILL.md description)
-head -3 /tmp/sar-research-loop--{rv_id}/.claude/skills/start/SKILL.md 2>/dev/null
-
-# Target metrics
-cat /tmp/rag-eval-report--{rv_id}.json 2>/dev/null
-
-# Target runs (last 5)
-tail -5 /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
-
-# Totals
-wc -l /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
-grep -c keep /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
-grep -c discard /tmp/sar-research-loop--{rv_id}/results.tsv 2>/dev/null
-```
-
-### 3. Target variants within each researcher variant
-
-```bash
-# Discover target variant clones
-ls -d <RAG_TARGET_REPO>--{rv_id}-tv-* 2>/dev/null
-
-# For each discovered target variant:
-cat /tmp/rag-eval-report--{rv_id}-tv-{N}.json 2>/dev/null
-```
-
-For the main researcher (no rv_id), check:
-```bash
-ls -d <RAG_TARGET_REPO>--*-tv-* 2>/dev/null
-```
-
-## Output Format
-
-Present as a tree:
+Each tick must collect ALL data and print the tree in this EXACT format:
 
 ```
 Hub: ~/.claude-profile-1
@@ -113,31 +53,79 @@ Hub: ~/.claude-profile-1
         Runs (2: 0 keep, 2 discard):
           #1  fff1234  0.65  baseline
           #2  ggg5678  0.55  discard  alternate eval
-
-COMPARISON
-  Main:   R@5=0.575  (5 runs)
-  rv-001: R@5=0.640  (8 runs)  ← best
-  rv-002: R@5=0.500  (2 runs)
 ```
 
-## Polling
+## Data collection commands
 
-Poll every 30 seconds. Repeat the full data collection and tree display. **Continue until the user interrupts. Do not ask whether to continue.**
+### Hub profile
+The hub's own `CLAUDE_CONFIG_DIR` from the environment.
 
-If nothing changed since last poll, print a one-line heartbeat:
+### Supervisor profile
+```bash
+cat <SUPERVISOR_REPO>/.supervisor/start-state.json 2>/dev/null | python3 -c "import sys,json,re; cmd=json.load(sys.stdin).get('command',''); m=re.search(r'CLAUDE_CONFIG_DIR=(\S+)',cmd); print(m.group(1) if m else 'unknown')"
 ```
-[HH:MM:SS] no changes (main: running, 0 researcher variants)
+
+### Main researcher
+```bash
+cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-status
 ```
 
-## Handling Missing Data
+### Main researcher target metrics
+```bash
+cat /tmp/rag-eval-report.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'P@5={d[\"precision_at_5\"]:.4f}  R@5={d[\"recall_at_5\"]:.4f}')"
+```
 
-- If a report JSON does not exist: show "no report yet"
-- If results.tsv does not exist: show "no runs yet"
-- If no researcher variants: skip that section
-- If no target variants within a researcher: just show the single target metrics
+### Main researcher runs
+```bash
+# Totals
+wc -l <RESEARCH_LOOP_REPO>/results.tsv
+grep -c keep <RESEARCH_LOOP_REPO>/results.tsv
+grep -c discard <RESEARCH_LOOP_REPO>/results.tsv
+# Last 3
+tail -3 <RESEARCH_LOOP_REPO>/results.tsv
+```
 
-## Important
+### Researcher variants
+```bash
+cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant list --json
+```
 
-- ALL commands go through `pixi run` for supervisor status — direct file reads are OK for reports and results.tsv
-- Use `researcher-loop-once` periodically (not every poll — every 2nd or 3rd cycle) for snapshot archiving
-- Do NOT ask "want me to keep polling?"
+For EACH variant:
+```bash
+cat <SUPERVISOR_REPO>/.supervisor/start--{rv_id}-state.json 2>/dev/null   # profile
+head -3 /tmp/sar-research-loop--{rv_id}/.claude/skills/start/SKILL.md     # variant name from description
+tail -3 /tmp/sar-research-loop--{rv_id}/results.tsv                       # runs
+wc -l /tmp/sar-research-loop--{rv_id}/results.tsv                         # total
+grep -c keep /tmp/sar-research-loop--{rv_id}/results.tsv                  # keeps
+grep -c discard /tmp/sar-research-loop--{rv_id}/results.tsv               # discards
+```
+
+### Target variants within each researcher variant
+```bash
+ls -d <RAG_TARGET_REPO>--{rv_id}-tv-* 2>/dev/null
+cat /tmp/rag-eval-report--{rv_id}-tv-{N}.json 2>/dev/null
+```
+
+## Tree formatting rules
+
+- Hub is the root node
+- Supervisor is a child of Hub (shows profile)
+- Researcher (main) is a child of Supervisor (shows profile, PID, running status)
+- Target is a child of Researcher (shows metrics)
+- Runs are indented under Target (show last 3 with commit hash, metric, status, description)
+- Researcher Variants are siblings of Researcher (main), each with their own profile and PID
+- Target Variants are children of their Researcher Variant
+- Use `├──` for non-last children, `└──` for last child
+- Use `│` for continuing vertical lines
+
+## Handling missing data
+
+- No researcher state file: show `(not started)`
+- No eval report: show `no report yet`
+- No results.tsv: show `no runs yet`
+- No researcher variants: omit that section entirely
+- No target variants within a researcher: just show the single target metrics
+
+## For a one-shot snapshot
+
+Use `/supervisor-list` instead.
