@@ -37,5 +37,23 @@ researcher-dot-claude-read = { cmd = "PYTHONPATH=src python -m sar_integration.d
 researcher-dot-claude-edit = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher edit", depends-on = [] }
 researcher-dot-claude-diff = { cmd = "PYTHONPATH=src python -m sar_integration.dot_claude_cli --repo researcher diff", depends-on = [] }
 
+[tool.pixi.environments]
+dev = { features = ["dev"], solve-group = "default" }
+
+[dependency-groups]
+dev = ["pytest>=8,<9", "pytest-timeout>=2,<3"]
+
+[tool.pixi.feature.dev.tasks]
+test = "PYTHONPATH=src python -m pytest tests/ -v"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = ["-v", "--tb=short"]
+timeout = 30
+markers = ["e2e: end-to-end tests"]
+
 [tool.pixi.dependencies]
 python = "3.14.*"
