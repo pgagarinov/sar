@@ -154,6 +154,25 @@ def _cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_delete(args: argparse.Namespace) -> int:
+    repo = _resolve_repo(args.repo)
+    claude_dir = repo / ".claude"
+    target = claude_dir / args.path
+    if not target.exists():
+        print(f"not found: {args.path}", file=sys.stderr)
+        return 1
+    target.unlink()
+    print(f"deleted: {args.path}")
+    # Auto-commit the deletion
+    import subprocess
+    subprocess.run(["git", "add", str(target)], cwd=repo, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", f"dot-claude-delete: remove {args.path}"],
+        cwd=repo, capture_output=True,
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dot-claude")
     parser.add_argument(
@@ -179,6 +198,10 @@ def build_parser() -> argparse.ArgumentParser:
     diff_p = subparsers.add_parser("diff")
     diff_p.add_argument("name", help="Asset name to diff (new content from stdin)")
     diff_p.set_defaults(func=_cmd_diff)
+
+    delete_p = subparsers.add_parser("delete")
+    delete_p.add_argument("path", help="Path relative to .claude/ to delete (e.g. scheduled_tasks.lock)")
+    delete_p.set_defaults(func=_cmd_delete)
 
     return parser
 

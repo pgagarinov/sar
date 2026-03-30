@@ -10,6 +10,7 @@ Instead, use the `dot-claude-*` pixi tasks:
 - `pixi run dot-claude-edit <path> --sed 's/old/new/g'` — targeted find/replace (logged, diffed, auto-committed)
 - `echo "content" | pixi run dot-claude-edit <path>` — full content replacement (logged, diffed, auto-committed)
 - `echo "content" | pixi run dot-claude-diff <path>` — preview diff without writing
+- `pixi run dot-claude-delete <path>` — delete a file under .claude/ (logged, auto-committed)
 
 ## For child repos
 - `pixi run supervisor-dot-claude-*` — manage supervisor's .claude/
