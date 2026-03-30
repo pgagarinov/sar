@@ -1,6 +1,6 @@
 # Supervisor Monitor Agent
 
-Collect SAR supervisor stats and print a tree. Run bash commands, format the output. Print ONLY the tree — no commentary, no preamble.
+Collect SAR supervisor stats and return structured JSON. Run bash commands, parse outputs, return a single JSON object. Print ONLY valid JSON — no commentary, no preamble, no markdown fences.
 
 ## Paths
 
@@ -57,47 +57,76 @@ Run ALL of these:
 
 ## Output format
 
-Print the tree in this EXACT format:
+Return a single JSON object with this structure:
 
-```
-Hub: <CLAUDE_CONFIG_DIR from environment>
-└── Supervisor: <supervisor profile>
-    │
-    ├── Researcher (main): <main profile>
-    │   PID: 95600  running
-    │   │
-    │   └── Target: P@5=0.65  R@5=0.575
-    │       Runs (last 3 of 5: 2 keep, 3 discard):
-    │         #3  112ba8b  0.65  baseline
-    │         #4  1cc81ef  0.35  discard  chunk overlap
-    │         #5  eca93b6  0.60  discard  swap RRF
-    │
-    ├── Researcher Variant rv-001 (precision-safe): <rv-001 profile>
-    │   PID: 96001  running
-    │   │
-    │   ├── Target Variant rv-001-tv-1: P@5=0.70  R@5=0.62
-    │   └── Target Variant rv-001-tv-2: P@5=0.68  R@5=0.64
-    │   Runs (last 3 of 8: 3 keep, 5 discard):
-    │     #6  ccc9012  0.68  keep     BM25 stop words
-    │     #7  ddd3456  0.62  discard  heading-aware
-    │     #8  eee7890  0.64  keep     overlap 300
-    │
-    └── Researcher Variant rv-002 (evaluator-direct): <rv-002 profile>
-        PID: 96002  stopped
-        │
-        └── Target Variant rv-002-tv-1: P@5=0.55  R@5=0.50
-        Runs (2: 0 keep, 2 discard):
-          #1  fff1234  0.65  baseline
-          #2  ggg5678  0.55  discard  alternate eval
+```json
+{
+  "hub_profile": "~/.claude-profile-2",
+  "supervisor_profile": "~/.claude-profile-1rsonal",
+  "researchers": [
+    {
+      "id": "main",
+      "name": null,
+      "profile": "~/.claude-profile-6",
+      "pid": 95600,
+      "running": true,
+      "target": {
+        "precision_at_5": 0.65,
+        "recall_at_5": 0.575,
+        "mrr": 0.70,
+        "ndcg_at_5": 0.76,
+        "hits": "19/20"
+      },
+      "runs": {
+        "total": 5,
+        "kept": 2,
+        "discarded": 3,
+        "last_3": [
+          {"n": 3, "commit": "112ba8b", "metric": 0.65, "status": "baseline", "description": "initial evaluation"},
+          {"n": 4, "commit": "1cc81ef", "metric": 0.35, "status": "discard", "description": "chunk overlap"},
+          {"n": 5, "commit": "eca93b6", "metric": 0.60, "status": "discard", "description": "swap RRF"}
+        ]
+      },
+      "target_variants": []
+    },
+    {
+      "id": "rv-001",
+      "name": "precision-safe",
+      "profile": "~/.claude-profile-9",
+      "pid": 96001,
+      "running": true,
+      "target": {
+        "precision_at_5": 0.70,
+        "recall_at_5": 0.62
+      },
+      "runs": {
+        "total": 8,
+        "kept": 3,
+        "discarded": 5,
+        "last_3": [
+          {"n": 6, "commit": "ccc9012", "metric": 0.68, "status": "keep", "description": "BM25 stop words"},
+          {"n": 7, "commit": "ddd3456", "metric": 0.62, "status": "discard", "description": "heading-aware"},
+          {"n": 8, "commit": "eee7890", "metric": 0.64, "status": "keep", "description": "overlap 300"}
+        ]
+      },
+      "target_variants": [
+        {"id": "rv-001-tv-1", "precision_at_5": 0.70, "recall_at_5": 0.62},
+        {"id": "rv-001-tv-2", "precision_at_5": 0.68, "recall_at_5": 0.64}
+      ]
+    }
+  ]
+}
 ```
 
 ## Rules
 
-- The main researcher IS a variant — always show it as "Researcher (main)". Never say "no variants" if main is running or has runs.
-- Additional researcher variants (rv-*) are siblings of main under the Supervisor node.
-- Use `├──` for non-last children, `└──` for last child, `│` for continuing lines.
-- If no eval report: show "no report yet" for that target.
-- If no results.tsv: show "no runs yet".
-- If main is not running AND no variants exist AND no results.tsv: show "(all stopped)" under Supervisor.
-- Truncate run descriptions to 60 chars. Show commit hash as first 7 chars.
-- Print ONLY the tree. No preamble, no explanation, no "here is the tree".
+- The main researcher is ALWAYS included as the first entry with `"id": "main"`.
+- Additional researcher variants (rv-*) follow main in the array.
+- If no eval report exists for a researcher, set `"target": null`.
+- If no results.tsv exists, set `"runs": null`.
+- If a researcher is not running: `"running": false, "pid": null`.
+- Parse results.tsv as tab-separated: commit, metric, status, description.
+- Extract variant name from SKILL.md description field (the `description:` line in frontmatter).
+- Truncate descriptions to 60 chars.
+- Commit hashes: first 7 chars.
+- Print ONLY the JSON. No preamble, no explanation, no markdown fences.
