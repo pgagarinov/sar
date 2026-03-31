@@ -76,10 +76,7 @@ pixi install
 # 3. Deploy all repos (clones and configures the 4 SAR repos)
 claude -p /deploy
 
-# 4. Run integration tests (18 tests: infra, clean state, live E2E)
-claude -p /test
-
-# 5. Start the supervisor (launches the full research loop)
+# 4. Start the supervisor (launches the full research loop)
 claude -p /supervisor-start
 ```
 
