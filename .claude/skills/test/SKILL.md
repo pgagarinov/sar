@@ -29,7 +29,7 @@ Test 1: harness-core tests
   PASS if all tests pass.
 
 Test 2: RAG target eval produces real metrics
-  cd <RAG_TARGET_REPO> && rm -rf /tmp/fluxapi-chroma && pixi run eval
+  cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
   PASS if /tmp/rag-eval-report.json exists and contains precision_at_5.
   Record the baseline precision value.
 
@@ -93,7 +93,7 @@ Test 17: Variant namespace isolation
   Generate two researcher variant IDs: test-iso-aaa and test-iso-bbb.
   Verify the following paths would NOT collide:
   - ../sar-rag-target--test-iso-aaa vs ../sar-rag-target--test-iso-bbb
-  - /tmp/fluxapi-chroma--test-iso-aaa-v1 vs /tmp/fluxapi-chroma--test-iso-bbb-v1
+  - /tmp/rag-index-cache--test-iso-aaa-v1 vs /tmp/rag-index-cache--test-iso-bbb-v1
   - /tmp/rag-eval-report--test-iso-aaa-v1.json vs /tmp/rag-eval-report--test-iso-bbb-v1.json
   PASS if all three pairs are distinct strings (trivially true by construction, but verify the naming convention produces non-overlapping paths).
 
@@ -110,7 +110,7 @@ Dispatch a subagent for Phase 2 cleanup:
 Agent(subagent_type="general-purpose", prompt="Clean all SAR repos for a fresh test run. Read .env from workspace root for paths.
 
 Step 1: Reset RAG target to seed
-  cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
+  cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/rag-index-cache && rm -f /tmp/rag-eval-report.json
   Then verify: pixi run eval
   Report the baseline precision_at_5.
 
@@ -172,7 +172,7 @@ Step 5: Verify results
     PASS if all entries are consistent.
 
   Test 11 - Final metric vs baseline:
-    cd <RAG_TARGET_REPO> && rm -rf /tmp/fluxapi-chroma && pixi run eval
+    cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
     Read /tmp/rag-eval-report.json.
     Compare final precision_at_5 to the Phase 1 baseline.
     PASS if final precision >= baseline precision (non-regression).
