@@ -69,8 +69,8 @@ rm -f /tmp/cc-sar-supervisor*.log
 ### 6. Remove target temp files
 
 ```bash
-rm -rf /tmp/fluxapi-chroma
-rm -rf /tmp/fluxapi-chroma--*
+rm -rf /tmp/rag-index-cache
+rm -rf /tmp/rag-index-cache--*
 rm -f /tmp/rag-eval-report*.json
 ```
 
