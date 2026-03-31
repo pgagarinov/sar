@@ -176,7 +176,7 @@ Step 5: Verify results
     Read /tmp/rag-eval-report.json.
     Compare final mrr to the Phase 1 baseline.
     PASS if final mrr >= baseline mrr (non-regression).
-    Report: baseline precision -> final precision, number of kept/discarded.
+    Report: baseline mrr -> final mrr, number of kept/discarded.
 
   Test 11a - History has metrics:
     cd <SUPERVISOR_REPO> && pixi run researcher-history --json
