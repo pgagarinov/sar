@@ -75,7 +75,7 @@ Given the JSON from the agent:
   - Use `├──` for non-last, `└──` for last
   - Show profile + timing: `(started HH:MM, running Xh Ym)` if running, `(started HH:MM, stopped after Xh Ym)` if stopped
   - Show `PID: {pid}  {running/stopped}`
-  - **Target**: `P@5={precision_at_5:.4f}  R@5={recall_at_5:.4f}` or `no report yet` if target is null
+  - **Target**: `MRR={mrr:.4f}  R@5={recall_at_5:.4f}` or `no report yet` if target is null
   - **Runs**: `Runs (last 3 of {total}: {kept} keep, {discarded} discard):` or `no runs yet` if runs is null
   - Each run: `#{n}  {commit}  {metric}  {status}  {description}`
   - **Target variants**: children of the researcher, show metrics for each
