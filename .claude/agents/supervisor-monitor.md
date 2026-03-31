@@ -78,14 +78,14 @@ Return a single JSON object with this structure:
 ```json
 {
   "now": "2026-03-30T18:15:00Z",
-  "hub_profile": "~/.claude-profile-2",
+  "hub_profile": "~\/.claude-<profile>",
   "supervisor_profile": "$CLAUDE_CONFIG_DIRS[1]",
   "supervisor_started_at": "2026-03-30T17:00:00Z",
   "researchers": [
     {
       "id": "main",
       "name": null,
-      "profile": "~/.claude-profile-6",
+      "profile": "~\/.claude-<profile>",
       "pid": 95600,
       "running": true,
       "started_at": "2026-03-30T17:00:05Z",
@@ -112,7 +112,7 @@ Return a single JSON object with this structure:
     {
       "id": "rv-001",
       "name": "precision-safe",
-      "profile": "~/.claude-profile-9",
+      "profile": "~\/.claude-<profile>",
       "pid": 96001,
       "running": true,
       "started_at": "2026-03-30T17:05:00Z",
