@@ -1,6 +1,6 @@
 # SAR — Supervised Agentic Research
 
-Integration hub for the SAR multi-repo system. Deploys, tests, and manages five interconnected repositories that implement the [Karpathy autonomous experiment loop](https://x.com/kaborojevic/status/1879189693837881833) pattern for iterative AI-driven improvement.
+Integration hub for the SAR multi-repo system. An enhanced version of [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — adding a supervision layer that monitors the researcher, edits its prompts, runs parallel variants, and merges winners. Five interconnected repositories that implement autonomous AI-driven research with two-level oversight.
 
 ## Repos
 
