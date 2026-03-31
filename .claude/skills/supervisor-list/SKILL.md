@@ -54,10 +54,10 @@ cd <SUPERVISOR_REPO> && pixi run researcher-history --limit 5 --json
 
 ```
 === Profiles ===
-Hub: ~/.claude-profile-1
-  Researcher (main): ~/.claude-profile-6
-  Researcher Variant rv-001: ~/.claude-profile-9
-  Researcher Variant rv-002: ~/.claude-profile-8
+Hub: ~\/.claude-<profile>
+  Researcher (main): ~\/.claude-<profile>
+  Researcher Variant rv-001: ~\/.claude-<profile>
+  Researcher Variant rv-002: ~\/.claude-<profile>
 
 === Supervisor ===
 Status: running  PID: XXXXX
