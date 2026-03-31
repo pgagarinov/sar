@@ -18,18 +18,18 @@ Read `.env` from the workspace root for `SUPERVISOR_REPO`, `RAG_TARGET_REPO`.
 
 ```bash
 # Stop any running researcher variants
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant list --json
+cd <SUPERVISOR_REPO> && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-variant list --json
 ```
 
 For each running variant:
 ```bash
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant stop --id <variant_id>
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant discard --id <variant_id>
+cd <SUPERVISOR_REPO> && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-variant stop --id <variant_id>
+cd <SUPERVISOR_REPO> && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-variant discard --id <variant_id>
 ```
 
 Then stop the main researcher:
 ```bash
-cd <SUPERVISOR_REPO> && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-stop
+cd <SUPERVISOR_REPO> && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-stop
 ```
 
 ### 2. Remove researcher variant clones
