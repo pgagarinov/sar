@@ -175,7 +175,7 @@ Step 5: Verify results
     cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run -e dev eval
     Read /tmp/rag-eval-report.json.
     Compare final mrr to the Phase 1 baseline.
-    PASS if final precision >= baseline precision (non-regression).
+    PASS if final mrr >= baseline mrr (non-regression).
     Report: baseline precision -> final precision, number of kept/discarded.
 
   Test 11a - History has metrics:
