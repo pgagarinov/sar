@@ -21,7 +21,7 @@ Run ALL of these:
 
 1. Researcher status:
    ```bash
-   cd $SUP && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-status 2>&1
+   cd $SUP && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-status 2>&1
    ```
 
 2. Supervisor profile and start time (from state file):
@@ -51,7 +51,7 @@ Run ALL of these:
 
 5. Researcher variants:
    ```bash
-   cd $SUP && CLAUDE_CONFIG_DIRS=~/.claude-profile-2:~/.claude-profile-1rsonal pixi run -e dev researcher-variant list --json 2>&1
+   cd $SUP && $CLAUDE_CONFIG_DIRS pixi run -e dev researcher-variant list --json 2>&1
    ```
 
 6. Current time (for duration calculation):
