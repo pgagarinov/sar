@@ -30,7 +30,7 @@ Test 1: harness-core tests
 
 Test 2: RAG target eval produces real metrics
   cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
-  PASS if /tmp/rag-eval-report.json exists and contains precision_at_5.
+  PASS if /tmp/rag-eval-report.json exists and contains mrr.
   Record the baseline precision value.
 
 Test 3: RAG target unit tests pass
@@ -112,7 +112,7 @@ Agent(subagent_type="general-purpose", prompt="Clean all SAR repos for a fresh t
 Step 1: Reset RAG target to seed
   cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/rag-index-cache && rm -f /tmp/rag-eval-report.json
   Then verify: pixi run eval
-  Report the baseline precision_at_5.
+  Report the baseline mrr.
 
 Step 2: Clean research loop
   cd <RESEARCH_LOOP_REPO> && rm -f results.tsv
@@ -136,7 +136,7 @@ IMPORTANT: This test runs REAL Claude sessions. It will take several minutes.
 
 Step 1: Record baseline
   cd <RAG_TARGET_REPO> && git log --oneline -1
-  Read /tmp/rag-eval-report.json for baseline precision_at_5.
+  Read /tmp/rag-eval-report.json for baseline mrr.
 
 Step 2: Start supervisor loop
   cd <SUPERVISOR_REPO> && pixi run researcher-loop --no-clean > /tmp/sar-supervisor-loop.log 2>&1 &
@@ -174,7 +174,7 @@ Step 5: Verify results
   Test 11 - Final metric vs baseline:
     cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
     Read /tmp/rag-eval-report.json.
-    Compare final precision_at_5 to the Phase 1 baseline.
+    Compare final mrr to the Phase 1 baseline.
     PASS if final precision >= baseline precision (non-regression).
     Report: baseline precision -> final precision, number of kept/discarded.
 
