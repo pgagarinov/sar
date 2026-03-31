@@ -26,7 +26,7 @@ Read `.env` from the workspace root.
 
 3. **Clean temporary files**:
    ```bash
-   rm -rf /tmp/fluxapi-chroma
+   rm -rf /tmp/rag-index-cache
    rm -f /tmp/rag-eval-report.json
    rm -f /tmp/cc-sar-supervisor.log
    ```
