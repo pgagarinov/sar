@@ -2,6 +2,27 @@
 
 Integration hub for the SAR multi-repo system. Deploys, tests, and manages five interconnected repositories that implement the [Karpathy autonomous experiment loop](https://x.com/kaborojevic/status/1879189693837881833) pattern for iterative AI-driven improvement.
 
+## Repos
+
+| Repo | Role | Link |
+|------|------|------|
+| [**sar-integration**](https://github.com/pgagarinov/sar-integration) | This repo — deploy, test, orchestrate | Hub |
+| [**sar-supervisor**](https://github.com/pgagarinov/sar-supervisor) | Outer researcher: monitors, snapshots, edits researcher prompts | Domain-agnostic |
+| [**sar-research-loop**](https://github.com/pgagarinov/sar-research-loop) | Inner researcher: autonomous evaluate → hypothesize → improve loop | Domain-specific |
+| [**sar-rag-target**](https://github.com/pgagarinov/sar-rag-target) | Target being improved — **seed only**, the researcher evolves it | RAG over QASPER |
+| [**sar-harness-core**](https://github.com/pgagarinov/sar-harness-core) | Shared Python library: checkpointing, prompt editing, metrics, git | No skills |
+
+## The Target is a Seed
+
+The target repo (`sar-rag-target`) contains only the **seed state** — a minimal RAG pipeline over 1,169 QASPER scientific papers with baseline NDCG@5 ≈ 0.05. The researcher's job is to improve it autonomously. The seed includes:
+
+- USearch vector index (HNSW, f16) with MLX embeddings on Apple Silicon
+- 2,814 evaluation questions with gold evidence labels from QASPER annotators
+- Index caching (12s cache hit vs 80s rebuild)
+- Simple vector retrieval — no BM25, no reranking, no fancy techniques
+
+Everything above baseline is research output, not committed infrastructure.
+
 ## Architecture
 
 ```
@@ -23,17 +44,17 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
                             v
 ┌──────────────────────────────────────────────────────────────────────┐
 │                     sar-research-loop                                  │
-│  Inner researcher: autonomous evaluate -> hypothesize -> improve loop │
+│  Inner researcher: autonomous evaluate → hypothesize → improve loop  │
 │  Skills: /start  /clean  /edit-target-prompts                        │
 │  Agents: evaluator, improver                                         │
 └───────────────────────────┬──────────────────────────────────────────┘
                             │ modifies & evaluates
                             v
 ┌──────────────────────────────────────────────────────────────────────┐
-│                       sar-rag-target                                  │
-│  Target system: RAG search over QASPER scientific papers             │
+│                       sar-rag-target (seed)                           │
+│  Target: RAG search over QASPER scientific papers                    │
 │  Skills: /run (single entry point)  /reset                           │
-│  Metric: mrr (maximize)                                              │
+│  Metric: ndcg_at_5 (maximize)                                        │
 └──────────────────────────────────────────────────────────────────────┘
 
 Shared library (used by supervisor + research-loop):
@@ -43,21 +64,11 @@ Shared library (used by supervisor + research-loop):
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-## Repos
-
-| Repo | Role | Skills |
-|------|------|--------|
-| **sar-supervisor** | Outer researcher: monitors, edits researcher prompts | `/start`, `/stop`, `/clean`, `/edit-prompts` |
-| **sar-research-loop** | Inner researcher: autonomous research loop | `/start`, `/clean`, `/edit-target-prompts` |
-| **sar-rag-target** | Target being improved (RAG search) | `/run`, `/reset` |
-| **sar-harness-core** | Shared Python library | *(no skills)* |
-| **sar-integration** | This repo — deploy, test, manage | `/deploy`, `/delete`, `/test`, `/supervisor-start` |
-
 ## Quick Start
 
 ```bash
 # 1. Clone this integration hub
-git clone <this-repo> sar-integration && cd sar-integration
+git clone git@github.com:pgagarinov/sar-integration.git && cd sar-integration
 
 # 2. Install
 pixi install
