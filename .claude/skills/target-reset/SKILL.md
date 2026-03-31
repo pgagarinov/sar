@@ -15,7 +15,7 @@ Read `.env` from the workspace root for `RAG_TARGET_REPO`.
 ## Steps
 
 ```bash
-cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/fluxapi-chroma && rm -f /tmp/rag-eval-report.json
+cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/rag-index-cache && rm -f /tmp/rag-eval-report.json
 ```
 
 This resets all code to the seed, resets the baseline cursor to match, cleans ChromaDB index, and removes stale eval reports.
