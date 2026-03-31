@@ -15,7 +15,7 @@ The target repo (`sar-rag-target`) is the **product being improved by the resear
 ## What IS testable in the target
 
 Only **infrastructure files** that are never edited by the researcher:
-- `src/rag/paths.py` — environment variable overrides for `RAG_INDEX_CACHE_DIR` and `RAG_REPORT_PATH`
+- `src/rag/paths.py` — environment variable overrides for `SAR_RAG_INDEX_CACHE_DIR` and `RAG_REPORT_PATH`
 - `.claude/` skills and agents — tested indirectly by the research-loop's E2E tests
 
 ## Why
