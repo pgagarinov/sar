@@ -36,7 +36,7 @@ Both levels support parallel variants with structural isolation via `git clone -
 
 **Researcher → multiple target variants (Level 2):**
 - Each target variant is a `git clone --local` from `CANONICAL_TARGET`
-- Isolated temp files via env vars: `CHROMA_PERSIST_DIR`, `RAG_REPORT_PATH`
+- Isolated temp files via env vars: `RAG_INDEX_CACHE_DIR`, `RAG_REPORT_PATH`
 - Target's `src/rag/paths.py` reads these env vars (infrastructure file, never edited by researcher)
 
 ### Researcher Variant Lifecycle
@@ -140,7 +140,7 @@ Autonomous autoresearch loop. Domain-specific. Dispatches evaluator and improver
 
 **Research protocol:** The orchestrator (SKILL.md) is a PURE DISPATCHER — it only dispatches agents, logs results, and decides keep/discard. It never reads source files, runs bash commands to inspect code, or analyzes reports directly. All context flows through agent dispatches.
 
-**Multi-variant support:** When `RV_ID` env var is set, creates isolated target variant clones with per-variant `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH`.
+**Multi-variant support:** When `RV_ID` env var is set, creates isolated target variant clones with per-variant `RAG_INDEX_CACHE_DIR` and `RAG_REPORT_PATH`.
 
 ### sar-rag-target — The Target
 
@@ -149,10 +149,10 @@ The RAG search system being improved. Domain-specific.
 **Skills:**
 | Skill | Purpose |
 |-------|---------|
-| `/run` | Clean ChromaDB, run eval pipeline, report metrics — the ONLY entry point for evaluation |
+| `/run` | Build/load cached USearch index, run eval pipeline, report metrics — the ONLY entry point for evaluation |
 | `/reset` | Revert all code changes, clean cached state, verify baseline |
 
-**Infrastructure:** `src/rag/paths.py` — reads `CHROMA_PERSIST_DIR` and `RAG_REPORT_PATH` from env vars. This file is read-only infrastructure, never edited by the researcher. It sits at the base of the git history below all commits.
+**Infrastructure:** `src/rag/paths.py` — reads `RAG_INDEX_CACHE_DIR`, `RAG_FORCE_REBUILD`, and `RAG_REPORT_PATH` from env vars. This file is read-only infrastructure, never edited by the researcher.
 
 **Pipeline:** `config.py` → `chunker.py` → `indexer.py` → `retriever.py` → `reranker.py` → `pipeline.py` → `evaluator.py`
 

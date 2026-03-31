@@ -31,9 +31,9 @@ Integration hub for the SAR multi-repo system. Deploys, tests, and manages five 
                             v
 ┌──────────────────────────────────────────────────────────────────────┐
 │                       sar-rag-target                                  │
-│  Target system: RAG search over FluxAPI docs                         │
+│  Target system: RAG search over QASPER scientific papers             │
 │  Skills: /run (single entry point)  /reset                           │
-│  Metric: precision_at_5 (maximize)                                   │
+│  Metric: mrr (maximize)                                              │
 └──────────────────────────────────────────────────────────────────────┘
 
 Shared library (used by supervisor + research-loop):
