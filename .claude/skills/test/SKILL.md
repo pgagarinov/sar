@@ -29,7 +29,7 @@ Test 1: harness-core tests
   PASS if all tests pass.
 
 Test 2: RAG target eval produces real metrics
-  cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
+  cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run -e dev eval
   PASS if /tmp/rag-eval-report.json exists and contains mrr.
   Record the baseline precision value.
 
@@ -111,7 +111,7 @@ Agent(subagent_type="general-purpose", prompt="Clean all SAR repos for a fresh t
 
 Step 1: Reset RAG target to seed
   cd <RAG_TARGET_REPO> && git reset --hard seed && git tag -f baseline seed && rm -rf /tmp/rag-index-cache && rm -f /tmp/rag-eval-report.json
-  Then verify: pixi run eval
+  Then verify: pixi run -e dev eval
   Report the baseline mrr.
 
 Step 2: Clean research loop
@@ -172,7 +172,7 @@ Step 5: Verify results
     PASS if all entries are consistent.
 
   Test 11 - Final metric vs baseline:
-    cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run eval
+    cd <RAG_TARGET_REPO> && rm -rf /tmp/rag-index-cache && pixi run -e dev eval
     Read /tmp/rag-eval-report.json.
     Compare final mrr to the Phase 1 baseline.
     PASS if final precision >= baseline precision (non-regression).
