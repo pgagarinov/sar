@@ -1,4 +1,4 @@
-# SAR — Supervised Agentic Research
+# SAR — Supervised Auto-Research
 
 Integration hub for the SAR multi-repo system. An enhanced version of [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — adding a supervision layer that monitors the researcher, edits its prompts, runs parallel variants, and merges winners. Five interconnected repositories that implement autonomous AI-driven research with two-level oversight.
 
@@ -6,7 +6,7 @@ Integration hub for the SAR multi-repo system. An enhanced version of [Karpathy'
 
 | Repo | Role | Link |
 |------|------|------|
-| [**sar-integration**](https://github.com/pgagarinov/sar-integration) | This repo — deploy, test, orchestrate | Hub |
+| [**sar**](https://github.com/pgagarinov/sar) | This repo — deploy, test, orchestrate | Hub |
 | [**sar-supervisor**](https://github.com/pgagarinov/sar-supervisor) | Outer researcher: monitors, snapshots, edits researcher prompts | Domain-agnostic |
 | [**sar-research-loop**](https://github.com/pgagarinov/sar-research-loop) | Inner researcher: autonomous evaluate → hypothesize → improve loop | Domain-specific |
 | [**sar-rag-target**](https://github.com/pgagarinov/sar-rag-target) | Target being improved — **seed only**, the researcher evolves it | RAG over QASPER |
