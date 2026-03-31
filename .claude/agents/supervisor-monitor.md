@@ -90,6 +90,7 @@ Return a single JSON object with this structure:
       "running": true,
       "started_at": "2026-03-30T17:00:05Z",
       "target": {
+        "mrr": 0.45,
         "precision_at_5": 0.65,
         "recall_at_5": 0.575,
         "mrr": 0.70,
