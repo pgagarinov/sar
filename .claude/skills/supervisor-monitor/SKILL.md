@@ -32,10 +32,10 @@ When the user invokes `/supervisor-monitor`:
 2. Parse the JSON and render the tree in this EXACT format:
 
 ```
-Hub: ~/.claude-profile-1
-└── Supervisor: ~/.claude-profile-2  (started 17:00, running 1h 15m)
+Hub: ~\/.claude-<profile>
+└── Supervisor: ~\/.claude-<profile>  (started 17:00, running 1h 15m)
     │
-    ├── Researcher (main): ~/.claude-profile-6  (started 17:00, running 1h 15m)
+    ├── Researcher (main): ~\/.claude-<profile>  (started 17:00, running 1h 15m)
     │   PID: 95600  running
     │   │
     │   └── Target: P@5=0.65  R@5=0.575
@@ -44,7 +44,7 @@ Hub: ~/.claude-profile-1
     │         #4  1cc81ef  0.35  discard  chunk overlap
     │         #5  eca93b6  0.60  discard  swap RRF
     │
-    ├── Researcher Variant rv-001 (precision-safe): ~/.claude-profile-9  (started 17:05, running 1h 10m)
+    ├── Researcher Variant rv-001 (precision-safe): ~\/.claude-<profile>  (started 17:05, running 1h 10m)
     │   PID: 96001  running
     │   │
     │   ├── Target Variant rv-001-tv-1: P@5=0.70  R@5=0.62
@@ -54,7 +54,7 @@ Hub: ~/.claude-profile-1
     │     #7  ddd3456  0.62  discard  heading-aware
     │     #8  eee7890  0.64  keep     overlap 300
     │
-    └── Researcher Variant rv-002 (evaluator-direct): ~/.claude-profile-8  (started 17:10, stopped after 25m)
+    └── Researcher Variant rv-002 (evaluator-direct): ~\/.claude-<profile>  (started 17:10, stopped after 25m)
         PID: 96002  stopped
         │
         └── Target Variant rv-002-tv-1: P@5=0.55  R@5=0.50
