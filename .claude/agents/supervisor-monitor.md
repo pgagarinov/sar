@@ -79,7 +79,7 @@ Return a single JSON object with this structure:
 {
   "now": "2026-03-30T18:15:00Z",
   "hub_profile": "~/.claude-profile-2",
-  "supervisor_profile": "~/.claude-profile-1rsonal",
+  "supervisor_profile": "$CLAUDE_CONFIG_DIRS[1]",
   "supervisor_started_at": "2026-03-30T17:00:00Z",
   "researchers": [
     {
