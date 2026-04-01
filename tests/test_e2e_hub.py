@@ -12,9 +12,15 @@ HUB_DIR = Path(__file__).parent.parent.resolve()
 
 
 def _run_cli(*args: str, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
-    env = {**os.environ, "PYTHONPATH": str(HUB_DIR / "src")}
+    env = {
+        **os.environ,
+        "PYTHONPATH": str(HUB_DIR / "src"),
+        "SUPERVISOR_REPO": str(HUB_DIR.parent / "sar-supervisor"),
+        "RESEARCH_LOOP_REPO": str(HUB_DIR.parent / "sar-research-loop"),
+        "SAR_TARGET_PATH": str(HUB_DIR.parent / "sar-rag-target"),
+    }
     return subprocess.run(
-        ["python", "-m", "sar_integration.dot_claude_cli", *args],
+        ["python", "-m", "harness_core.dot_claude_cli", *args],
         capture_output=True, text=True, timeout=30, env=env, cwd=str(HUB_DIR),
         input=input_text,
     )
